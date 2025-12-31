@@ -13,6 +13,7 @@ import StudentRegistration from "./pages/StudentRegistration";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPrograms from "./pages/admin/AdminPrograms";
 import AdminStudents from "./pages/admin/AdminStudents";
+import AdminTeachers from "./pages/admin/AdminTeachers";
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import NotFound from "./pages/NotFound";
@@ -61,6 +62,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminAttendance />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/teachers" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminTeachers />
                 </ProtectedRoute>
               } 
             />
