@@ -1,10 +1,23 @@
+import Navbar from "@/components/landing/Navbar";
+import HeroSection from "@/components/landing/HeroSection";
+import ProgramsSection from "@/components/landing/ProgramsSection";
+import AboutSection from "@/components/landing/AboutSection";
+import AdmissionsSection from "@/components/landing/AdmissionsSection";
+import ContactSection from "@/components/landing/ContactSection";
+import Footer from "@/components/landing/Footer";
+
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-foreground mb-4">Welcome</h1>
-        <p className="text-muted-foreground">Start building your new project</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main>
+        <HeroSection />
+        <ProgramsSection />
+        <AboutSection />
+        <AdmissionsSection />
+        <ContactSection />
+      </main>
+      <Footer />
     </div>
   );
 };
