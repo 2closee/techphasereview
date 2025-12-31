@@ -1628,6 +1628,66 @@ export type Database = {
         }
         Relationships: []
       }
+      student_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          notes: string | null
+          payment_date: string
+          payment_method: string
+          payment_reference: string | null
+          payment_type: string
+          program_id: string
+          recorded_by: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+          payment_reference?: string | null
+          payment_type?: string
+          program_id: string
+          recorded_by?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+          payment_reference?: string | null
+          payment_type?: string
+          program_id?: string
+          recorded_by?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_payments_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_registrations: {
         Row: {
           address: string | null
@@ -1797,6 +1857,57 @@ export type Database = {
           subject?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      teachers: {
+        Row: {
+          bio: string | null
+          created_at: string
+          email: string
+          experience_years: number | null
+          first_name: string
+          hire_date: string | null
+          id: string
+          is_active: boolean | null
+          last_name: string
+          phone: string
+          qualification: string | null
+          specialization: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          email: string
+          experience_years?: number | null
+          first_name: string
+          hire_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_name: string
+          phone: string
+          qualification?: string | null
+          specialization: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          email?: string
+          experience_years?: number | null
+          first_name?: string
+          hire_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_name?: string
+          phone?: string
+          qualification?: string | null
+          specialization?: string
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
