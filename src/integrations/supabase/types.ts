@@ -1713,6 +1713,10 @@ export type Database = {
       }
       get_settlement_period: { Args: { date_input: string }; Returns: string }
       get_user_repair_center: { Args: { _user_id: string }; Returns: number }
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1738,7 +1742,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "teacher" | "student"
       dispute_status: "open" | "under_review" | "resolved" | "rejected"
       job_status:
         | "requested"
@@ -1894,7 +1898,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "teacher", "student"],
       dispute_status: ["open", "under_review", "resolved", "rejected"],
       job_status: [
         "requested",
