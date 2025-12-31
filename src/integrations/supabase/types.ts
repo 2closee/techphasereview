@@ -764,6 +764,63 @@ export type Database = {
         }
         Relationships: []
       }
+      programs: {
+        Row: {
+          category: string
+          created_at: string | null
+          curriculum: Json | null
+          description: string | null
+          duration: string
+          duration_unit: string
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          max_students: number | null
+          name: string
+          registration_fee: number | null
+          requirements: string[] | null
+          start_date: string | null
+          tuition_fee: number
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          curriculum?: Json | null
+          description?: string | null
+          duration: string
+          duration_unit?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          max_students?: number | null
+          name: string
+          registration_fee?: number | null
+          requirements?: string[] | null
+          start_date?: string | null
+          tuition_fee?: number
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          curriculum?: Json | null
+          description?: string | null
+          duration?: string
+          duration_unit?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          max_students?: number | null
+          name?: string
+          registration_fee?: number | null
+          requirements?: string[] | null
+          start_date?: string | null
+          tuition_fee?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       "Repair Center": {
         Row: {
           address: string | null
@@ -1519,6 +1576,95 @@ export type Database = {
           value?: string
         }
         Relationships: []
+      }
+      student_registrations: {
+        Row: {
+          address: string | null
+          city: string | null
+          country: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          education_level: string | null
+          email: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          first_name: string
+          gender: string | null
+          how_heard_about_us: string | null
+          id: string
+          last_name: string
+          notes: string | null
+          phone: string
+          previous_experience: string | null
+          program_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          state: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          education_level?: string | null
+          email: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          first_name: string
+          gender?: string | null
+          how_heard_about_us?: string | null
+          id?: string
+          last_name: string
+          notes?: string | null
+          phone: string
+          previous_experience?: string | null
+          program_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          education_level?: string | null
+          email?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          first_name?: string
+          gender?: string | null
+          how_heard_about_us?: string | null
+          id?: string
+          last_name?: string
+          notes?: string | null
+          phone?: string
+          previous_experience?: string | null
+          program_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_registrations_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_ticket_messages: {
         Row: {
