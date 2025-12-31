@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          marked_by: string
+          notes: string | null
+          program_id: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          marked_by: string
+          notes?: string | null
+          program_id: string
+          status: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          marked_by?: string
+          notes?: string | null
+          program_id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       completion_feedback_notifications: {
         Row: {
           id: string
