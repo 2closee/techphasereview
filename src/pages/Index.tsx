@@ -1,18 +1,11 @@
-import HeroSection from "@/components/HeroSection";
-import ServiceRequest from "@/components/ServiceRequest";
-import RepairCenters from "@/components/RepairCenters";
-import JobTracking from "@/components/JobTracking";
-import Footer from "@/components/Footer";
-
 const Index = () => {
   return (
-    <main className="min-h-screen">
-      <HeroSection />
-      <ServiceRequest />
-      <JobTracking />
-      <RepairCenters />
-      <Footer />
-    </main>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-foreground mb-4">Welcome</h1>
+        <p className="text-muted-foreground">Start building your new project</p>
+      </div>
+    </div>
   );
 };
 
