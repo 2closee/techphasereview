@@ -7,7 +7,10 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import StudentRegistration from "./pages/StudentRegistration";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminPrograms from "./pages/admin/AdminPrograms";
+import AdminStudents from "./pages/admin/AdminStudents";
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import NotFound from "./pages/NotFound";
@@ -24,6 +27,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/register" element={<StudentRegistration />} />
             
             {/* Admin Routes */}
             <Route 
@@ -31,6 +35,22 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/programs" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminPrograms />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/students" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminStudents />
                 </ProtectedRoute>
               } 
             />
