@@ -31,6 +31,7 @@ const adminNavItems: NavItem[] = [
   { title: 'Students', href: '/admin/students', icon: Users },
   { title: 'Teachers', href: '/admin/teachers', icon: GraduationCap },
   { title: 'Programs', href: '/admin/programs', icon: BookOpen },
+  { title: 'Attendance', href: '/admin/attendance', icon: ClipboardList },
   { title: 'Timetable', href: '/admin/timetable', icon: Calendar },
   { title: 'Payments', href: '/admin/payments', icon: CreditCard },
   { title: 'Reports', href: '/admin/reports', icon: BarChart3 },
