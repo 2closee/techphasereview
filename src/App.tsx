@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import TeacherAttendance from "./pages/teacher/TeacherAttendance";
+import AdminAttendance from "./pages/admin/AdminAttendance";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -52,6 +53,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminStudents />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/attendance" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminAttendance />
                 </ProtectedRoute>
               } 
             />
