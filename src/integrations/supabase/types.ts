@@ -1904,9 +1904,11 @@ export type Database = {
       student_registrations: {
         Row: {
           address: string | null
+          alternative_phone: string | null
           city: string | null
           country: string | null
           created_at: string | null
+          current_income: string | null
           date_of_birth: string | null
           education_level: string | null
           email: string
@@ -1916,7 +1918,10 @@ export type Database = {
           gender: string | null
           how_heard_about_us: string | null
           id: string
+          is_pwd: string | null
           last_name: string
+          lga: string | null
+          middle_name: string | null
           notes: string | null
           phone: string
           preferred_location_id: string | null
@@ -1931,9 +1936,11 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          alternative_phone?: string | null
           city?: string | null
           country?: string | null
           created_at?: string | null
+          current_income?: string | null
           date_of_birth?: string | null
           education_level?: string | null
           email: string
@@ -1943,7 +1950,10 @@ export type Database = {
           gender?: string | null
           how_heard_about_us?: string | null
           id?: string
+          is_pwd?: string | null
           last_name: string
+          lga?: string | null
+          middle_name?: string | null
           notes?: string | null
           phone: string
           preferred_location_id?: string | null
@@ -1958,9 +1968,11 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          alternative_phone?: string | null
           city?: string | null
           country?: string | null
           created_at?: string | null
+          current_income?: string | null
           date_of_birth?: string | null
           education_level?: string | null
           email?: string
@@ -1970,7 +1982,10 @@ export type Database = {
           gender?: string | null
           how_heard_about_us?: string | null
           id?: string
+          is_pwd?: string | null
           last_name?: string
+          lga?: string | null
+          middle_name?: string | null
           notes?: string | null
           phone?: string
           preferred_location_id?: string | null
