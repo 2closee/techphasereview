@@ -10,12 +10,12 @@ const contactInfo = [
   {
     icon: MapPin,
     title: "Port Harcourt Center",
-    details: "123 Trans Amadi Industrial Layout, Port Harcourt, Rivers State",
+    details: "274 Port Harcourt - Aba Expy, Port Harcourt, Rivers State",
   },
   {
     icon: MapPin,
     title: "Warri Center",
-    details: "45 Effurun-Sapele Road, Warri, Delta State",
+    details: "71 Airport Road, Warri, Delta State",
   },
   {
     icon: Phone,
