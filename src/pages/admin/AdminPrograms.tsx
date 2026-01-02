@@ -11,13 +11,13 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, ChefHat, Scissors, BookOpen, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Monitor, Cpu, BookOpen, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 
 const programSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters').max(100),
   description: z.string().max(1000).optional(),
-  category: z.enum(['culinary', 'fashion']),
+  category: z.enum(['software', 'hardware']),
   duration: z.string().min(1, 'Duration is required'),
   duration_unit: z.enum(['weeks', 'months', 'years']),
   tuition_fee: z.number().min(0, 'Fee must be positive'),
@@ -30,7 +30,7 @@ type Program = {
   id: string;
   name: string;
   description: string | null;
-  category: 'culinary' | 'fashion';
+  category: 'software' | 'hardware';
   duration: string;
   duration_unit: string;
   tuition_fee: number;
@@ -46,7 +46,7 @@ type ProgramFormData = z.infer<typeof programSchema>;
 const defaultFormData: ProgramFormData = {
   name: '',
   description: '',
-  category: 'culinary',
+  category: 'software',
   duration: '',
   duration_unit: 'months',
   tuition_fee: 0,
@@ -195,7 +195,7 @@ export default function AdminPrograms() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p className="text-muted-foreground">Manage culinary and fashion programs</p>
+            <p className="text-muted-foreground">Manage software and hardware programs</p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
@@ -219,7 +219,7 @@ export default function AdminPrograms() {
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="e.g., Professional Pastry & Baking"
+                      placeholder="e.g., Full Stack Web Development"
                     />
                     {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                   </div>
@@ -228,20 +228,20 @@ export default function AdminPrograms() {
                     <Label htmlFor="category">Category *</Label>
                     <Select
                       value={formData.category}
-                      onValueChange={(value: 'culinary' | 'fashion') => setFormData({ ...formData, category: value })}
+                      onValueChange={(value: 'software' | 'hardware') => setFormData({ ...formData, category: value })}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="culinary">
+                        <SelectItem value="software">
                           <span className="flex items-center gap-2">
-                            <ChefHat className="w-4 h-4" /> Culinary
+                            <Monitor className="w-4 h-4" /> Software
                           </span>
                         </SelectItem>
-                        <SelectItem value="fashion">
+                        <SelectItem value="hardware">
                           <span className="flex items-center gap-2">
-                            <Scissors className="w-4 h-4" /> Fashion
+                            <Cpu className="w-4 h-4" /> Hardware
                           </span>
                         </SelectItem>
                       </SelectContent>
@@ -368,10 +368,10 @@ export default function AdminPrograms() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      {program.category === 'culinary' ? (
-                        <ChefHat className="w-5 h-5 text-orange-500" />
+                      {program.category === 'software' ? (
+                        <Monitor className="w-5 h-5 text-blue-500" />
                       ) : (
-                        <Scissors className="w-5 h-5 text-pink-500" />
+                        <Cpu className="w-5 h-5 text-green-500" />
                       )}
                       <Badge variant={program.is_active ? 'default' : 'secondary'}>
                         {program.is_active ? 'Active' : 'Inactive'}
