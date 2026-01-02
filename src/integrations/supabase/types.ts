@@ -164,6 +164,63 @@ export type Database = {
           },
         ]
       }
+      course_progress: {
+        Row: {
+          attended_sessions: number | null
+          completed_at: string | null
+          completion_percentage: number | null
+          created_at: string | null
+          id: string
+          program_id: string
+          started_at: string | null
+          status: string
+          student_id: string
+          total_sessions: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          attended_sessions?: number | null
+          completed_at?: string | null
+          completion_percentage?: number | null
+          created_at?: string | null
+          id?: string
+          program_id: string
+          started_at?: string | null
+          status?: string
+          student_id: string
+          total_sessions?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          attended_sessions?: number | null
+          completed_at?: string | null
+          completion_percentage?: number | null
+          created_at?: string | null
+          id?: string
+          program_id?: string
+          started_at?: string | null
+          status?: string
+          student_id?: string
+          total_sessions?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_progress_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_progress_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_commissions: {
         Row: {
           commission_amount: number
@@ -570,6 +627,78 @@ export type Database = {
           },
         ]
       }
+      geolocation_checkins: {
+        Row: {
+          check_in_time: string | null
+          created_at: string | null
+          device_info: Json | null
+          distance_from_center_meters: number | null
+          id: string
+          ip_address: string | null
+          is_within_geofence: boolean
+          latitude: number
+          longitude: number
+          notes: string | null
+          session_id: string
+          student_id: string
+          user_agent: string | null
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          check_in_time?: string | null
+          created_at?: string | null
+          device_info?: Json | null
+          distance_from_center_meters?: number | null
+          id?: string
+          ip_address?: string | null
+          is_within_geofence?: boolean
+          latitude: number
+          longitude: number
+          notes?: string | null
+          session_id: string
+          student_id: string
+          user_agent?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          check_in_time?: string | null
+          created_at?: string | null
+          device_info?: Json | null
+          distance_from_center_meters?: number | null
+          id?: string
+          ip_address?: string | null
+          is_within_geofence?: boolean
+          latitude?: number
+          longitude?: number
+          notes?: string | null
+          session_id?: string
+          student_id?: string
+          user_agent?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geolocation_checkins_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "training_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "geolocation_checkins_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_status_history: {
         Row: {
           changed_by: string | null
@@ -692,6 +821,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          read_at: string | null
+          related_entity_id: string | null
+          related_entity_type: string | null
+          scheduled_for: string | null
+          sent_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          read_at?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          read_at?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       payments: {
         Row: {
@@ -1613,6 +1787,45 @@ export type Database = {
         }
         Relationships: []
       }
+      session_enrollments: {
+        Row: {
+          enrolled_at: string | null
+          id: string
+          session_id: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          enrolled_at?: string | null
+          id?: string
+          session_id: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          enrolled_at?: string | null
+          id?: string
+          session_id?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_enrollments_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "training_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings: {
         Row: {
           key: string
@@ -1706,6 +1919,7 @@ export type Database = {
           last_name: string
           notes: string | null
           phone: string
+          preferred_location_id: string | null
           previous_experience: string | null
           program_id: string | null
           reviewed_at: string | null
@@ -1732,6 +1946,7 @@ export type Database = {
           last_name: string
           notes?: string | null
           phone: string
+          preferred_location_id?: string | null
           previous_experience?: string | null
           program_id?: string | null
           reviewed_at?: string | null
@@ -1758,6 +1973,7 @@ export type Database = {
           last_name?: string
           notes?: string | null
           phone?: string
+          preferred_location_id?: string | null
           previous_experience?: string | null
           program_id?: string | null
           reviewed_at?: string | null
@@ -1768,6 +1984,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "student_registrations_preferred_location_id_fkey"
+            columns: ["preferred_location_id"]
+            isOneToOne: false
+            referencedRelation: "training_locations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "student_registrations_program_id_fkey"
             columns: ["program_id"]
@@ -1910,6 +2133,133 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      training_locations: {
+        Row: {
+          address: string
+          city: string
+          code: string
+          created_at: string | null
+          email: string | null
+          geofence_radius_meters: number
+          id: string
+          is_active: boolean | null
+          latitude: number
+          longitude: number
+          name: string
+          phone: string | null
+          state: string
+          updated_at: string | null
+        }
+        Insert: {
+          address: string
+          city: string
+          code: string
+          created_at?: string | null
+          email?: string | null
+          geofence_radius_meters?: number
+          id?: string
+          is_active?: boolean | null
+          latitude: number
+          longitude: number
+          name: string
+          phone?: string | null
+          state: string
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string
+          city?: string
+          code?: string
+          created_at?: string | null
+          email?: string | null
+          geofence_radius_meters?: number
+          id?: string
+          is_active?: boolean | null
+          latitude?: number
+          longitude?: number
+          name?: string
+          phone?: string | null
+          state?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      training_sessions: {
+        Row: {
+          cancellation_reason: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_time: string
+          id: string
+          instructor_id: string | null
+          is_cancelled: boolean | null
+          location_id: string
+          max_attendees: number
+          program_id: string
+          session_date: string
+          start_time: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          cancellation_reason?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time: string
+          id?: string
+          instructor_id?: string | null
+          is_cancelled?: boolean | null
+          location_id: string
+          max_attendees?: number
+          program_id: string
+          session_date: string
+          start_time: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          cancellation_reason?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time?: string
+          id?: string
+          instructor_id?: string | null
+          is_cancelled?: boolean | null
+          location_id?: string
+          max_attendees?: number
+          program_id?: string
+          session_date?: string
+          start_time?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_sessions_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_sessions_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "training_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_sessions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

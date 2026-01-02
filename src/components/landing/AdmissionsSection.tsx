@@ -1,31 +1,31 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { FileText, CreditCard, GraduationCap, ArrowRight, CheckCircle } from "lucide-react";
+import { FileText, CreditCard, GraduationCap, ArrowRight, CheckCircle, MapPin } from "lucide-react";
 
 const steps = [
   {
     step: 1,
-    title: "Submit Application",
-    description: "Complete our online application form with your personal details and program preference.",
-    icon: FileText,
+    title: "Choose Location & Program",
+    description: "Select your preferred training center (Port Harcourt or Warri) and program of study.",
+    icon: MapPin,
   },
   {
     step: 2,
-    title: "Review & Interview",
-    description: "Our admissions team reviews your application and schedules an interview if needed.",
-    icon: CheckCircle,
+    title: "Submit Application",
+    description: "Complete our online application form with your personal details and educational background.",
+    icon: FileText,
   },
   {
     step: 3,
-    title: "Pay Tuition",
-    description: "Secure your spot with flexible payment options including installment plans.",
-    icon: CreditCard,
+    title: "Assessment & Enrollment",
+    description: "Complete a brief assessment and pay your registration fee to secure your spot.",
+    icon: CheckCircle,
   },
   {
     step: 4,
     title: "Begin Training",
-    description: "Start your journey with orientation and dive into your chosen program.",
+    description: "Start your hands-on training journey with orientation at your chosen center.",
     icon: GraduationCap,
   },
 ];
@@ -39,10 +39,10 @@ const AdmissionsSection = () => {
             Admissions
           </span>
           <h2 className="text-3xl md:text-5xl font-display font-bold mt-4 mb-6">
-            Your Path to <span className="text-primary">Success</span> Starts Here
+            Your Path to <span className="text-primary">Tech Success</span> Starts Here
           </h2>
           <p className="text-secondary-foreground/70 text-lg font-body">
-            Join our community of aspiring professionals. The application process is simple 
+            Join our community of aspiring tech professionals. The enrollment process is simple 
             and our team is here to guide you every step of the way.
           </p>
         </div>
@@ -76,11 +76,11 @@ const AdmissionsSection = () => {
         {/* CTA */}
         <div className="text-center">
           <p className="text-secondary-foreground/70 mb-6 font-body">
-            Ready to take the first step? Apply now and our admissions team will be in touch within 48 hours.
+            Ready to launch your tech career? Apply now and our admissions team will be in touch within 48 hours.
           </p>
           <Link to="/auth?mode=signup">
-            <Button variant="gold" size="xl" className="group">
-              Apply for Admission
+            <Button size="lg" className="group bg-gradient-primary hover:opacity-90 px-8">
+              Apply for Enrollment
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>

@@ -1,26 +1,26 @@
 import { Link } from "react-router-dom";
-import { ChefHat, Scissors, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
+import { Monitor, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
     programs: [
-      { name: "Culinary Arts", href: "#programs" },
-      { name: "Fashion Design", href: "#programs" },
-      { name: "Certificate Courses", href: "#programs" },
-      { name: "Workshops", href: "#programs" },
+      { name: "Hardware & Networking", href: "#programs" },
+      { name: "Electrical/Electronics", href: "#programs" },
+      { name: "Database Administration", href: "#programs" },
+      { name: "Network Administration", href: "#programs" },
     ],
     company: [
       { name: "About Us", href: "#about" },
-      { name: "Our Faculty", href: "#about" },
+      { name: "Our Instructors", href: "#about" },
       { name: "Careers", href: "#contact" },
       { name: "News & Events", href: "#" },
     ],
     support: [
       { name: "Contact Us", href: "#contact" },
       { name: "FAQs", href: "#" },
-      { name: "Student Portal", href: "/auth" },
+      { name: "Trainee Portal", href: "/auth" },
       { name: "Payment Options", href: "#admissions" },
     ],
   };
@@ -39,18 +39,17 @@ const Footer = () => {
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-3 mb-6">
-              <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-gold shadow-gold">
-                <ChefHat className="w-6 h-6 text-primary-foreground" />
-                <Scissors className="w-4 h-4 text-primary-foreground absolute -bottom-1 -right-1" />
+              <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-primary shadow-primary">
+                <Monitor className="w-6 h-6 text-primary-foreground" />
               </div>
               <div className="flex flex-col">
-                <span className="font-display text-xl font-bold text-secondary-foreground">Topearl</span>
-                <span className="text-xs text-secondary-foreground/60 font-body tracking-wider">INTERNATIONAL INSTITUTE</span>
+                <span className="font-display text-xl font-bold text-secondary-foreground">Meranos</span>
+                <span className="text-xs text-secondary-foreground/60 font-body tracking-wider">NIGERIA LIMITED</span>
               </div>
             </Link>
             <p className="text-secondary-foreground/70 font-body mb-6 max-w-sm">
-              Empowering the next generation of culinary artists and fashion designers 
-              with world-class training and industry connections.
+              Empowering Nigeria's tech workforce through practical TVET training 
+              at our centers in Port Harcourt and Warri.
             </p>
             <div className="flex items-center gap-4">
               {socialLinks.map((social, index) => (
@@ -73,7 +72,7 @@ const Footer = () => {
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-secondary-foreground/70 hover:text-primary font-body transition-colors"
+                    className="text-secondary-foreground/70 hover:text-primary font-body transition-colors text-sm"
                   >
                     {link.name}
                   </a>
@@ -90,7 +89,7 @@ const Footer = () => {
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-secondary-foreground/70 hover:text-primary font-body transition-colors"
+                    className="text-secondary-foreground/70 hover:text-primary font-body transition-colors text-sm"
                   >
                     {link.name}
                   </a>
@@ -107,7 +106,7 @@ const Footer = () => {
                 <li key={link.name}>
                   <Link
                     to={link.href}
-                    className="text-secondary-foreground/70 hover:text-primary font-body transition-colors"
+                    className="text-secondary-foreground/70 hover:text-primary font-body transition-colors text-sm"
                   >
                     {link.name}
                   </Link>
@@ -120,7 +119,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-secondary-foreground/10 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-secondary-foreground/60 text-sm font-body">
-            © {currentYear} Topearl International Institute. All rights reserved.
+            © {currentYear} Meranos Nigeria Limited. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-sm font-body">
             <a href="#" className="text-secondary-foreground/60 hover:text-primary transition-colors">
