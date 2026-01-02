@@ -29,6 +29,14 @@ interface Teacher {
   created_at: string;
 }
 
+const SPECIALIZATIONS = [
+  "Software",
+  "Hardware",
+  "Photography",
+  "Video Editing",
+  "Cinematography",
+];
+
 const AdminTeachers = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -37,6 +45,8 @@ const AdminTeachers = () => {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const [customSpecialization, setCustomSpecialization] = useState("");
+  const [showCustomInput, setShowCustomInput] = useState(false);
 
   const [formData, setFormData] = useState({
     first_name: "",
@@ -64,12 +74,13 @@ const AdminTeachers = () => {
 
   const addTeacherMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
+      const finalSpecialization = data.specialization === "other" ? customSpecialization : data.specialization;
       const { error } = await supabase.from("teachers").insert({
         first_name: data.first_name,
         last_name: data.last_name,
         email: data.email,
         phone: data.phone,
-        specialization: data.specialization,
+        specialization: finalSpecialization,
         qualification: data.qualification || null,
         experience_years: data.experience_years ? parseInt(data.experience_years) : null,
         bio: data.bio || null,
@@ -130,26 +141,37 @@ const AdminTeachers = () => {
       bio: "",
       hire_date: "",
     });
+    setCustomSpecialization("");
+    setShowCustomInput(false);
   };
 
   const handleEdit = (teacher: Teacher) => {
     setSelectedTeacher(teacher);
+    const isCustom = !SPECIALIZATIONS.includes(teacher.specialization);
     setFormData({
       first_name: teacher.first_name,
       last_name: teacher.last_name,
       email: teacher.email,
       phone: teacher.phone,
-      specialization: teacher.specialization,
+      specialization: isCustom ? "other" : teacher.specialization,
       qualification: teacher.qualification || "",
       experience_years: teacher.experience_years?.toString() || "",
       bio: teacher.bio || "",
       hire_date: teacher.hire_date || "",
     });
+    if (isCustom) {
+      setCustomSpecialization(teacher.specialization);
+      setShowCustomInput(true);
+    } else {
+      setCustomSpecialization("");
+      setShowCustomInput(false);
+    }
     setIsEditOpen(true);
   };
 
   const handleSubmitEdit = () => {
     if (!selectedTeacher) return;
+    const finalSpecialization = formData.specialization === "other" ? customSpecialization : formData.specialization;
     updateTeacherMutation.mutate({
       id: selectedTeacher.id,
       data: {
@@ -157,7 +179,7 @@ const AdminTeachers = () => {
         last_name: formData.last_name,
         email: formData.email,
         phone: formData.phone,
-        specialization: formData.specialization,
+        specialization: finalSpecialization,
         qualification: formData.qualification || null,
         experience_years: formData.experience_years ? parseInt(formData.experience_years) : null,
         bio: formData.bio || null,
@@ -226,19 +248,35 @@ const AdminTeachers = () => {
           <Label htmlFor="specialization">Specialization *</Label>
           <Select
             value={formData.specialization}
-            onValueChange={(value) => setFormData({ ...formData, specialization: value })}
+            onValueChange={(value) => {
+              if (value === "other") {
+                setShowCustomInput(true);
+                setFormData({ ...formData, specialization: "other" });
+              } else {
+                setShowCustomInput(false);
+                setCustomSpecialization("");
+                setFormData({ ...formData, specialization: value });
+              }
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select specialization" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Culinary Arts">Culinary Arts</SelectItem>
-              <SelectItem value="Fashion Design">Fashion Design</SelectItem>
-              <SelectItem value="Pastry & Baking">Pastry & Baking</SelectItem>
-              <SelectItem value="Tailoring">Tailoring</SelectItem>
-              <SelectItem value="Pattern Making">Pattern Making</SelectItem>
+              {SPECIALIZATIONS.map((spec) => (
+                <SelectItem key={spec} value={spec}>{spec}</SelectItem>
+              ))}
+              <SelectItem value="other">Other (Custom)</SelectItem>
             </SelectContent>
           </Select>
+          {showCustomInput && (
+            <Input
+              placeholder="Enter custom specialization"
+              value={customSpecialization}
+              onChange={(e) => setCustomSpecialization(e.target.value)}
+              className="mt-2"
+            />
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="qualification">Qualification</Label>
@@ -280,7 +318,7 @@ const AdminTeachers = () => {
       </div>
       <Button
         onClick={onSubmit}
-        disabled={!formData.first_name || !formData.last_name || !formData.email || !formData.phone || !formData.specialization}
+        disabled={!formData.first_name || !formData.last_name || !formData.email || !formData.phone || !formData.specialization || (formData.specialization === "other" && !customSpecialization)}
       >
         {submitLabel}
       </Button>
