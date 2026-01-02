@@ -31,8 +31,9 @@ const adminNavItems: NavItem[] = [
   { title: 'Students', href: '/admin/students', icon: Users },
   { title: 'Teachers', href: '/admin/teachers', icon: GraduationCap },
   { title: 'Programs', href: '/admin/programs', icon: BookOpen },
+  { title: 'Sessions', href: '/admin/sessions', icon: Calendar },
   { title: 'Attendance', href: '/admin/attendance', icon: ClipboardList },
-  { title: 'Timetable', href: '/admin/timetable', icon: Calendar },
+  { title: 'Geo Check-ins', href: '/admin/geolocation', icon: Clock },
   { title: 'Payments', href: '/admin/payments', icon: CreditCard },
   { title: 'Reports', href: '/admin/reports', icon: BarChart3 },
   { title: 'Settings', href: '/admin/settings', icon: Settings },
@@ -50,9 +51,9 @@ const teacherNavItems: NavItem[] = [
 
 const studentNavItems: NavItem[] = [
   { title: 'Dashboard', href: '/student', icon: LayoutDashboard },
+  { title: 'Sessions', href: '/student/sessions', icon: Calendar },
+  { title: 'Check-In', href: '/student/checkin', icon: Clock },
   { title: 'My Courses', href: '/student/courses', icon: BookOpen },
-  { title: 'Timetable', href: '/student/timetable', icon: Calendar },
-  { title: 'Attendance', href: '/student/attendance', icon: Clock },
   { title: 'Grades', href: '/student/grades', icon: FileText },
   { title: 'Payments', href: '/student/payments', icon: CreditCard },
   { title: 'Profile', href: '/student/profile', icon: UserCircle },
