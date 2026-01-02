@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, MapPin } from "lucide-react";
 
 const HeroSection = () => {
   return (
@@ -24,34 +24,45 @@ const HeroSection = () => {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent border border-primary/20 mb-8 animate-fade-up">
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium text-foreground font-body">
-              Admissions Open for 2025
+              Enrolling Now for 2025 Cohort
             </span>
           </div>
 
           {/* Main Heading */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-foreground leading-tight mb-6 animate-fade-up" style={{ animationDelay: "0.1s" }}>
-            Master the Art of{" "}
-            <span className="text-gradient-gold">Culinary</span>{" "}
-            <span className="text-foreground">&</span>{" "}
-            <span className="text-gradient-gold">Fashion</span>
+            Build Your Tech Career with{" "}
+            <span className="text-gradient-primary">TVET Training</span>
           </h1>
 
           {/* Subheading */}
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 font-body animate-fade-up" style={{ animationDelay: "0.2s" }}>
-            Transform your passion into profession at Nigeria's premier institute for culinary arts and fashion design. 
-            World-class training, industry connections, and hands-on experience.
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-6 font-body animate-fade-up" style={{ animationDelay: "0.2s" }}>
+            Meranos Nigeria Limited offers world-class technical and vocational education 
+            at our training centers in Port Harcourt and Warri. Practical skills for real careers.
           </p>
+
+          {/* Locations */}
+          <div className="flex items-center justify-center gap-6 mb-10 animate-fade-up" style={{ animationDelay: "0.25s" }}>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MapPin className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">Port Harcourt</span>
+            </div>
+            <div className="w-1 h-1 rounded-full bg-muted-foreground" />
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MapPin className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">Warri</span>
+            </div>
+          </div>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up" style={{ animationDelay: "0.3s" }}>
             <Link to="/auth?mode=signup">
-              <Button variant="gold" size="xl" className="group">
+              <Button size="lg" className="group bg-gradient-primary hover:opacity-90 px-8">
                 Start Your Journey
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
             <a href="#programs">
-              <Button variant="outline" size="xl">
+              <Button variant="outline" size="lg" className="px-8">
                 Explore Programs
               </Button>
             </a>
@@ -60,15 +71,15 @@ const HeroSection = () => {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-8 mt-16 pt-16 border-t border-border animate-fade-up" style={{ animationDelay: "0.4s" }}>
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-display font-bold text-primary mb-2">500+</div>
-              <div className="text-sm text-muted-foreground font-body">Graduates</div>
+              <div className="text-3xl md:text-4xl font-display font-bold text-primary mb-2">1000+</div>
+              <div className="text-sm text-muted-foreground font-body">Trained Graduates</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-display font-bold text-primary mb-2">15+</div>
-              <div className="text-sm text-muted-foreground font-body">Expert Instructors</div>
+              <div className="text-3xl md:text-4xl font-display font-bold text-primary mb-2">2</div>
+              <div className="text-sm text-muted-foreground font-body">Training Centers</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-display font-bold text-primary mb-2">95%</div>
+              <div className="text-3xl md:text-4xl font-display font-bold text-primary mb-2">92%</div>
               <div className="text-sm text-muted-foreground font-body">Employment Rate</div>
             </div>
           </div>

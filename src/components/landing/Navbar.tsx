@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChefHat, Scissors } from "lucide-react";
+import { Menu, X, Monitor, MapPin } from "lucide-react";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
     { name: "Programs", href: "#programs" },
+    { name: "Locations", href: "#locations" },
     { name: "About", href: "#about" },
     { name: "Admissions", href: "#admissions" },
     { name: "Contact", href: "#contact" },
@@ -19,13 +20,12 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-gold shadow-gold">
-              <ChefHat className="w-6 h-6 text-primary-foreground" />
-              <Scissors className="w-4 h-4 text-primary-foreground absolute -bottom-1 -right-1" />
+            <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-primary shadow-primary">
+              <Monitor className="w-6 h-6 text-primary-foreground" />
             </div>
             <div className="flex flex-col">
-              <span className="font-display text-xl font-bold text-foreground">Topearl</span>
-              <span className="text-xs text-muted-foreground font-body tracking-wider">INTERNATIONAL INSTITUTE</span>
+              <span className="font-display text-xl font-bold text-foreground">Meranos</span>
+              <span className="text-xs text-muted-foreground font-body tracking-wider">NIGERIA LIMITED</span>
             </div>
           </Link>
 
@@ -50,8 +50,8 @@ const Navbar = () => {
               </Button>
             </Link>
             <Link to="/auth?mode=signup">
-              <Button variant="gold" size="sm">
-                Apply Now
+              <Button size="sm" className="bg-gradient-primary hover:opacity-90">
+                Enroll Now
               </Button>
             </Link>
           </div>
@@ -86,8 +86,8 @@ const Navbar = () => {
                   </Button>
                 </Link>
                 <Link to="/auth?mode=signup" onClick={() => setIsOpen(false)}>
-                  <Button variant="gold" className="w-full">
-                    Apply Now
+                  <Button className="w-full bg-gradient-primary">
+                    Enroll Now
                   </Button>
                 </Link>
               </div>

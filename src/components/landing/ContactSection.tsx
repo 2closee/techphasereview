@@ -9,18 +9,23 @@ import { toast } from "sonner";
 const contactInfo = [
   {
     icon: MapPin,
-    title: "Visit Us",
-    details: "123 Education Avenue, Victoria Island, Lagos, Nigeria",
+    title: "Port Harcourt Center",
+    details: "123 Trans Amadi Industrial Layout, Port Harcourt, Rivers State",
+  },
+  {
+    icon: MapPin,
+    title: "Warri Center",
+    details: "45 Effurun-Sapele Road, Warri, Delta State",
   },
   {
     icon: Phone,
     title: "Call Us",
-    details: "+234 (0) 123 456 7890",
+    details: "+234 803 000 0001 | +234 803 000 0002",
   },
   {
     icon: Mail,
     title: "Email Us",
-    details: "admissions@topearl.edu.ng",
+    details: "info@meranos.ng",
   },
   {
     icon: Clock,
@@ -51,30 +56,30 @@ const ContactSection = () => {
             Get In Touch
           </span>
           <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mt-4 mb-6">
-            Have Questions? <span className="text-gradient-gold">Let's Talk</span>
+            Have Questions? <span className="text-gradient-primary">Let's Talk</span>
           </h2>
           <p className="text-muted-foreground text-lg font-body">
             Our admissions team is here to help. Reach out with any questions about our 
-            programs, fees, or application process.
+            programs, fees, or enrollment process.
           </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Contact Info */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {contactInfo.map((item, index) => (
               <Card 
-                key={item.title} 
+                key={item.title + index} 
                 className="border-border bg-card hover:shadow-soft transition-shadow animate-fade-up"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <CardContent className="flex items-start gap-4 p-6">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <item.icon className="w-6 h-6 text-primary" />
+                <CardContent className="flex items-start gap-4 p-5">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <item.icon className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg font-display mb-1">{item.title}</CardTitle>
-                    <p className="text-muted-foreground font-body">{item.details}</p>
+                    <CardTitle className="text-base font-display mb-1">{item.title}</CardTitle>
+                    <p className="text-muted-foreground font-body text-sm">{item.details}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -139,7 +144,7 @@ const ContactSection = () => {
                     className="bg-background resize-none"
                   />
                 </div>
-                <Button variant="gold" size="lg" className="w-full group">
+                <Button size="lg" className="w-full group bg-gradient-primary hover:opacity-90">
                   Send Message
                   <Send className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>

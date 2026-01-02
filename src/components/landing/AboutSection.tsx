@@ -3,23 +3,23 @@ import { Users, Trophy, Building, Globe } from "lucide-react";
 const features = [
   {
     icon: Users,
-    title: "Expert Faculty",
-    description: "Learn from industry veterans with decades of experience in culinary and fashion industries.",
+    title: "Expert Instructors",
+    description: "Learn from industry professionals with years of hands-on experience in ICT and engineering.",
   },
   {
     icon: Building,
     title: "Modern Facilities",
-    description: "Train in fully-equipped kitchens, design studios, and computer labs with the latest technology.",
+    description: "Train in well-equipped labs with industry-standard hardware, software, and networking equipment.",
   },
   {
     icon: Trophy,
     title: "Industry Recognition",
-    description: "Our certifications are recognized by leading employers in Nigeria and internationally.",
+    description: "Our certifications are recognized by employers across Nigeria and the broader African market.",
   },
   {
     icon: Globe,
-    title: "Global Network",
-    description: "Connect with alumni working at top restaurants, fashion houses, and design studios worldwide.",
+    title: "Career Placement",
+    description: "Strong industry connections and job placement support to help you launch your tech career.",
   },
 ];
 
@@ -31,20 +31,19 @@ const AboutSection = () => {
           {/* Content Side */}
           <div>
             <span className="text-primary font-semibold text-sm uppercase tracking-wider font-body">
-              About Topearl
+              About Meranos
             </span>
             <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mt-4 mb-6">
-              Where Passion Meets <span className="text-gradient-gold">Excellence</span>
+              Empowering Nigeria's <span className="text-gradient-primary">Tech Workforce</span>
             </h2>
             <p className="text-muted-foreground text-lg mb-8 font-body leading-relaxed">
-              Founded with a vision to nurture Nigeria's creative talents, Topearl International Institute 
-              has become a leading destination for aspiring culinary artists and fashion designers. 
-              Our holistic approach combines traditional techniques with modern innovation.
+              Meranos Nigeria Limited is a leading ICT consultancy firm with a mission to bridge 
+              the skills gap in Nigeria's technology sector. Through our TVET centers in Port Harcourt 
+              and Warri, we provide practical, industry-relevant training.
             </p>
             <p className="text-muted-foreground font-body leading-relaxed mb-8">
-              We believe in hands-on learning, industry immersion, and personal mentorship. 
-              Every student receives individualized attention to help them discover and develop 
-              their unique creative voice.
+              Our approach combines theoretical knowledge with extensive hands-on practice. 
+              Every trainee graduates with real-world experience and the skills employers are looking for.
             </p>
 
             {/* Features Grid */}
@@ -80,9 +79,9 @@ const AboutSection = () => {
                       <div className="w-8 h-8 rounded-full bg-primary" />
                     </div>
                   </div>
-                  <h3 className="text-xl font-display font-bold text-foreground mb-2">Our Campus</h3>
+                  <h3 className="text-xl font-display font-bold text-foreground mb-2">Our Training Centers</h3>
                   <p className="text-muted-foreground font-body text-sm">
-                    State-of-the-art facilities designed for creative excellence
+                    State-of-the-art facilities in Port Harcourt & Warri
                   </p>
                 </div>
               </div>
@@ -90,7 +89,7 @@ const AboutSection = () => {
               {/* Floating Card */}
               <div className="absolute -bottom-6 -left-6 bg-card p-6 rounded-xl shadow-elevated border border-border animate-float">
                 <div className="flex items-center gap-4">
-                  <div className="text-4xl font-display font-bold text-primary">10+</div>
+                  <div className="text-4xl font-display font-bold text-primary">15+</div>
                   <div className="text-sm text-muted-foreground font-body">
                     Years of<br />Excellence
                   </div>

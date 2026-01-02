@@ -97,13 +97,13 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/20 to-background p-4">
       <Card className="w-full max-w-md border-primary/20 shadow-elegant">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-gradient-gold rounded-full flex items-center justify-center">
+          <div className="mx-auto w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center">
             <GraduationCap className="w-8 h-8 text-primary-foreground" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-display text-foreground">Topearl Institute</CardTitle>
+            <CardTitle className="text-2xl font-display text-foreground">Meranos Nigeria</CardTitle>
             <CardDescription className="text-muted-foreground">
-              Learning Management System
+              TVET Training Portal
             </CardDescription>
           </div>
         </CardHeader>

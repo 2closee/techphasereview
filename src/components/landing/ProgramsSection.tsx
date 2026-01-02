@@ -1,37 +1,47 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChefHat, Scissors, Clock, Award, ArrowRight } from "lucide-react";
+import { Monitor, Wrench, Database, Network, Clock, Award, ArrowRight } from "lucide-react";
 
 const programs = [
   {
     id: 1,
-    title: "Professional Culinary Arts",
-    description: "Master international cuisines, pastry arts, and kitchen management in our state-of-the-art facilities.",
-    icon: ChefHat,
-    duration: "12 Months",
-    certification: "Diploma",
-    features: ["International Cuisine", "Pastry & Baking", "Food Safety", "Kitchen Management"],
-    color: "from-orange-500 to-red-500",
+    title: "Computer Hardware & Networking",
+    description: "Master computer assembly, repair, troubleshooting, and network infrastructure setup and maintenance.",
+    icon: Monitor,
+    duration: "6 Months",
+    certification: "Professional Certificate",
+    features: ["PC Assembly & Repair", "Network Setup", "Troubleshooting", "Preventive Maintenance"],
+    color: "from-blue-500 to-cyan-500",
   },
   {
     id: 2,
-    title: "Fashion Design & Styling",
-    description: "From pattern making to runway presentations, develop your unique creative vision in fashion.",
-    icon: Scissors,
-    duration: "18 Months",
-    certification: "Advanced Diploma",
-    features: ["Pattern Making", "Garment Construction", "Fashion Illustration", "Portfolio Development"],
-    color: "from-purple-500 to-pink-500",
+    title: "Industrial Electrical/Electronics",
+    description: "Learn electrical installations, electronics repair, and industrial automation systems.",
+    icon: Wrench,
+    duration: "9 Months",
+    certification: "Advanced Certificate",
+    features: ["Electrical Installation", "Electronics Repair", "PLC Basics", "Safety Standards"],
+    color: "from-orange-500 to-amber-500",
   },
   {
     id: 3,
-    title: "Certificate Courses",
-    description: "Short-term intensive programs for specific skills in culinary or fashion disciplines.",
-    icon: Award,
-    duration: "3-6 Months",
-    certification: "Certificate",
-    features: ["Catering & Events", "Bridal Styling", "Baking Masterclass", "Personal Shopping"],
-    color: "from-teal-500 to-cyan-500",
+    title: "Database Administration",
+    description: "Comprehensive training in database design, SQL, administration, and data management.",
+    icon: Database,
+    duration: "6 Months",
+    certification: "Professional Certificate",
+    features: ["SQL Programming", "Database Design", "Backup & Recovery", "Performance Tuning"],
+    color: "from-purple-500 to-pink-500",
+  },
+  {
+    id: 4,
+    title: "Network Administration",
+    description: "Enterprise networking, server administration, and cybersecurity fundamentals.",
+    icon: Network,
+    duration: "9 Months",
+    certification: "Advanced Certificate",
+    features: ["Server Administration", "Network Security", "Cloud Basics", "Virtualization"],
+    color: "from-green-500 to-emerald-500",
   },
 ];
 
@@ -45,16 +55,16 @@ const ProgramsSection = () => {
             Our Programs
           </span>
           <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mt-4 mb-6">
-            Craft Your Future with Expert Training
+            Industry-Ready TVET Courses
           </h2>
           <p className="text-muted-foreground text-lg font-body">
-            Choose from our comprehensive range of programs designed to transform beginners 
-            into industry professionals.
+            Practical, hands-on training programs designed to prepare you for real-world 
+            technical careers in Nigeria's growing ICT sector.
           </p>
         </div>
 
         {/* Programs Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 gap-8">
           {programs.map((program, index) => (
             <Card 
               key={program.id} 

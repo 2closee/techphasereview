@@ -242,10 +242,10 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-display font-bold text-foreground">
-                  Welcome to Topearl LMS
+                  Welcome to Meranos TVET Portal
                 </h2>
                 <p className="text-muted-foreground mt-1">
-                  Manage your institute's operations from one place
+                  Manage your training centers from one place
                 </p>
               </div>
               <div className="hidden md:block">
