@@ -56,7 +56,8 @@ export default function StudentRegistration() {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [step, setStep] = useState<'form' | 'summary'>('form');
+  const [registrationId, setRegistrationId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<Partial<RegistrationFormData>>({
     last_name: '',
@@ -133,9 +134,14 @@ export default function StudentRegistration() {
       return;
     }
 
+    // Move to summary step
+    setStep('summary');
+  };
+
+  const handleConfirmAndProceed = async () => {
     setSubmitting(true);
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('student_registrations')
       .insert({
         first_name: formData.first_name,
@@ -154,17 +160,28 @@ export default function StudentRegistration() {
         education_level: formData.education_level || null,
         current_income: formData.current_income || null,
         previous_experience: formData.previous_experience || null,
-      });
+        payment_status: 'unpaid',
+        status: 'pending',
+      })
+      .select('id')
+      .single();
 
     setSubmitting(false);
 
     if (error) {
       toast.error('Failed to submit registration. Please try again.');
-    } else {
-      setSubmitted(true);
-      toast.success('Registration submitted successfully!');
+      return;
+    }
+
+    if (data) {
+      setRegistrationId(data.id);
+      toast.success('Registration submitted! Create your account to continue.');
+      // Navigate to complete enrollment page
+      navigate(`/complete-enrollment?registration_id=${data.id}`);
     }
   };
+
+  const selectedProgram = programs.find(p => p.id === formData.program_id);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -174,30 +191,83 @@ export default function StudentRegistration() {
     }).format(amount);
   };
 
-  if (submitted) {
+  // Show summary step before final submission
+  if (step === 'summary' && selectedProgram) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="pt-32 pb-16 px-4">
-          <div className="max-w-lg mx-auto text-center">
-            <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="w-10 h-10 text-green-500" />
-            </div>
-            <h1 className="text-3xl font-display font-bold text-foreground mb-4">
-              Registration Submitted!
-            </h1>
-            <p className="text-muted-foreground mb-8">
-              Thank you for applying to Topearl International Institute. Our admissions team will review your application and contact you within 2-3 business days.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="outline" onClick={() => navigate('/')}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Home
-              </Button>
-              <Button variant="gold" onClick={() => setSubmitted(false)}>
-                Submit Another
-              </Button>
-            </div>
+        <div className="pt-28 pb-16 px-4">
+          <div className="container mx-auto max-w-lg">
+            <Button
+              variant="ghost"
+              onClick={() => setStep('form')}
+              className="mb-6"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Form
+            </Button>
+
+            <Card className="border-primary/20">
+              <CardHeader className="text-center pb-2">
+                <div className="mx-auto w-16 h-16 bg-gradient-gold rounded-full flex items-center justify-center mb-4">
+                  <CheckCircle2 className="w-8 h-8 text-primary-foreground" />
+                </div>
+                <CardTitle className="text-2xl font-display">Confirm Your Registration</CardTitle>
+                <CardDescription>
+                  Review your details before proceeding
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Student Info Summary */}
+                <div className="p-4 bg-secondary/50 rounded-lg space-y-2">
+                  <p className="font-medium text-foreground">
+                    {formData.first_name} {formData.middle_name} {formData.last_name}
+                  </p>
+                  <p className="text-sm text-muted-foreground">{formData.email}</p>
+                  <p className="text-sm text-muted-foreground">{formData.phone}</p>
+                </div>
+
+                {/* Program Summary */}
+                <div className="p-4 border border-primary/20 rounded-lg bg-primary/5">
+                  <div className="flex items-center gap-3 mb-3">
+                    {selectedProgram.category === 'software' ? (
+                      <Monitor className="w-6 h-6 text-blue-500" />
+                    ) : (
+                      <Cpu className="w-6 h-6 text-green-500" />
+                    )}
+                    <div>
+                      <p className="font-medium text-foreground">{selectedProgram.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedProgram.duration} {selectedProgram.duration_unit}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="border-t border-primary/10 pt-3 mt-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Tuition Fee</span>
+                      <span className="text-xl font-bold text-primary">
+                        {formatCurrency(selectedProgram.tuition_fee)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-sm text-muted-foreground text-center">
+                  After registration, you'll create your account to access your student dashboard. 
+                  Payment can be made from your dashboard.
+                </p>
+
+                <Button 
+                  variant="gold" 
+                  className="w-full" 
+                  onClick={handleConfirmAndProceed}
+                  disabled={submitting}
+                >
+                  {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Confirm & Create Account
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
         <Footer />
