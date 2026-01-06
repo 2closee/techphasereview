@@ -78,7 +78,7 @@ const AdmissionsSection = () => {
           <p className="text-secondary-foreground/70 mb-6 font-body">
             Ready to launch your tech career? Apply now and our admissions team will be in touch within 48 hours.
           </p>
-          <Link to="/auth?mode=signup">
+          <Link to="/register">
             <Button size="lg" className="group bg-gradient-primary hover:opacity-90 px-8">
               Apply for Enrollment
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

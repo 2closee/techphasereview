@@ -627,6 +627,53 @@ export type Database = {
           },
         ]
       }
+      enrollment_payments: {
+        Row: {
+          amount: number
+          completed_at: string | null
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json | null
+          payment_provider: string | null
+          payment_reference: string | null
+          registration_id: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          payment_provider?: string | null
+          payment_reference?: string | null
+          registration_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          payment_provider?: string | null
+          payment_reference?: string | null
+          registration_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollment_payments_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "student_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       geolocation_checkins: {
         Row: {
           check_in_time: string | null
@@ -1903,6 +1950,7 @@ export type Database = {
       }
       student_registrations: {
         Row: {
+          account_created: boolean
           address: string | null
           alternative_phone: string | null
           city: string | null
@@ -1923,6 +1971,7 @@ export type Database = {
           lga: string | null
           middle_name: string | null
           notes: string | null
+          payment_status: string
           phone: string
           preferred_location_id: string | null
           previous_experience: string | null
@@ -1935,6 +1984,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          account_created?: boolean
           address?: string | null
           alternative_phone?: string | null
           city?: string | null
@@ -1955,6 +2005,7 @@ export type Database = {
           lga?: string | null
           middle_name?: string | null
           notes?: string | null
+          payment_status?: string
           phone: string
           preferred_location_id?: string | null
           previous_experience?: string | null
@@ -1967,6 +2018,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          account_created?: boolean
           address?: string | null
           alternative_phone?: string | null
           city?: string | null
@@ -1987,6 +2039,7 @@ export type Database = {
           lga?: string | null
           middle_name?: string | null
           notes?: string | null
+          payment_status?: string
           phone?: string
           preferred_location_id?: string | null
           previous_experience?: string | null

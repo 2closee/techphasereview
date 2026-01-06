@@ -14,6 +14,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import StudentRegistration from "./pages/StudentRegistration";
+import CompleteEnrollment from "./pages/CompleteEnrollment";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPrograms from "./pages/admin/AdminPrograms";
 import AdminStudents from "./pages/admin/AdminStudents";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/register" element={<StudentRegistration />} />
+            <Route path="/complete-enrollment" element={<CompleteEnrollment />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
