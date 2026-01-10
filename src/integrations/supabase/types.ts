@@ -164,6 +164,60 @@ export type Database = {
           },
         ]
       }
+      course_batches: {
+        Row: {
+          batch_number: number
+          created_at: string
+          current_count: number
+          id: string
+          location_id: string
+          max_students: number
+          program_id: string
+          start_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          batch_number?: number
+          created_at?: string
+          current_count?: number
+          id?: string
+          location_id: string
+          max_students?: number
+          program_id: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          batch_number?: number
+          created_at?: string
+          current_count?: number
+          id?: string
+          location_id?: string
+          max_students?: number
+          program_id?: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_batches_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "training_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_batches_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_progress: {
         Row: {
           attended_sessions: number | null
@@ -1953,6 +2007,7 @@ export type Database = {
           account_created: boolean
           address: string | null
           alternative_phone: string | null
+          batch_id: string | null
           city: string | null
           country: string | null
           created_at: string | null
@@ -1976,6 +2031,7 @@ export type Database = {
           preferred_location_id: string | null
           previous_experience: string | null
           program_id: string | null
+          projected_batch_number: number | null
           reviewed_at: string | null
           reviewed_by: string | null
           state: string | null
@@ -1987,6 +2043,7 @@ export type Database = {
           account_created?: boolean
           address?: string | null
           alternative_phone?: string | null
+          batch_id?: string | null
           city?: string | null
           country?: string | null
           created_at?: string | null
@@ -2010,6 +2067,7 @@ export type Database = {
           preferred_location_id?: string | null
           previous_experience?: string | null
           program_id?: string | null
+          projected_batch_number?: number | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           state?: string | null
@@ -2021,6 +2079,7 @@ export type Database = {
           account_created?: boolean
           address?: string | null
           alternative_phone?: string | null
+          batch_id?: string | null
           city?: string | null
           country?: string | null
           created_at?: string | null
@@ -2044,6 +2103,7 @@ export type Database = {
           preferred_location_id?: string | null
           previous_experience?: string | null
           program_id?: string | null
+          projected_batch_number?: number | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           state?: string | null
@@ -2052,6 +2112,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "student_registrations_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "course_batches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "student_registrations_preferred_location_id_fkey"
             columns: ["preferred_location_id"]

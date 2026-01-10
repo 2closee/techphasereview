@@ -8,10 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { GraduationCap, Loader2, ArrowLeft, Monitor, Cpu, CheckCircle2 } from 'lucide-react';
+import { GraduationCap, Loader2, ArrowLeft, Monitor, Cpu, CheckCircle2, MapPin, Users } from 'lucide-react';
 import { z } from 'zod';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
+
+const WARRI_LOCATION_ID = 'af2ca449-9394-46dd-b4b3-216bb50e9aeb';
 
 const registrationSchema = z.object({
   last_name: z.string().trim().min(2, 'Surname must be at least 2 characters').max(50),
@@ -30,6 +32,7 @@ const registrationSchema = z.object({
   current_income: z.string().trim().max(100).optional(),
   previous_experience: z.string().trim().max(500).optional(),
   program_id: z.string().uuid('Please select a preferred skill training'),
+  preferred_location_id: z.string().uuid('Please select a training center'),
 });
 
 type RegistrationFormData = z.infer<typeof registrationSchema>;
@@ -43,6 +46,13 @@ type Program = {
   tuition_fee: number;
 };
 
+type TrainingLocation = {
+  id: string;
+  name: string;
+  city: string;
+  state: string;
+};
+
 const NIGERIAN_STATES = [
   'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
   'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe',
@@ -54,11 +64,14 @@ const NIGERIAN_STATES = [
 export default function StudentRegistration() {
   const navigate = useNavigate();
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [locations, setLocations] = useState<TrainingLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<'form' | 'summary'>('form');
   const [registrationId, setRegistrationId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [batchInfo, setBatchInfo] = useState<{ batchNumber: number; currentCount: number } | null>(null);
+  const [loadingBatch, setLoadingBatch] = useState(false);
   const [formData, setFormData] = useState<Partial<RegistrationFormData>>({
     last_name: '',
     first_name: '',
@@ -76,25 +89,75 @@ export default function StudentRegistration() {
     current_income: '',
     previous_experience: '',
     program_id: '',
+    preferred_location_id: '',
   });
 
   useEffect(() => {
-    fetchPrograms();
+    fetchData();
   }, []);
 
-  const fetchPrograms = async () => {
-    const { data, error } = await supabase
-      .from('programs')
-      .select('id, name, category, duration, duration_unit, tuition_fee')
-      .eq('is_active', true)
-      .order('category', { ascending: true });
+  // Fetch batch info when Warri is selected with a program
+  useEffect(() => {
+    if (formData.preferred_location_id === WARRI_LOCATION_ID && formData.program_id) {
+      fetchBatchInfo(formData.program_id);
+    } else {
+      setBatchInfo(null);
+    }
+  }, [formData.preferred_location_id, formData.program_id]);
+
+  const fetchData = async () => {
+    const [programsResult, locationsResult] = await Promise.all([
+      supabase
+        .from('programs')
+        .select('id, name, category, duration, duration_unit, tuition_fee')
+        .eq('is_active', true)
+        .order('category', { ascending: true }),
+      supabase
+        .from('training_locations')
+        .select('id, name, city, state')
+        .eq('is_active', true)
+        .order('name', { ascending: true })
+    ]);
     
-    if (error) {
+    if (programsResult.error) {
       toast.error('Failed to load programs');
     } else {
-      setPrograms(data || []);
+      setPrograms(programsResult.data || []);
     }
+
+    if (locationsResult.error) {
+      toast.error('Failed to load training locations');
+    } else {
+      setLocations(locationsResult.data || []);
+    }
+    
     setLoading(false);
+  };
+
+  const fetchBatchInfo = async (programId: string) => {
+    setLoadingBatch(true);
+    try {
+      // Count paid registrations for this program at Warri
+      const { count, error } = await supabase
+        .from('student_registrations')
+        .select('*', { count: 'exact', head: true })
+        .eq('program_id', programId)
+        .eq('preferred_location_id', WARRI_LOCATION_ID)
+        .eq('payment_status', 'paid');
+
+      if (error) throw error;
+
+      const paidCount = count || 0;
+      const batchNumber = Math.floor(paidCount / 15) + 1;
+      const currentCount = paidCount % 15;
+
+      setBatchInfo({ batchNumber, currentCount });
+    } catch (error) {
+      console.error('Error fetching batch info:', error);
+      setBatchInfo(null);
+    } finally {
+      setLoadingBatch(false);
+    }
   };
 
   const handleChange = (field: keyof RegistrationFormData, value: string) => {
@@ -141,6 +204,11 @@ export default function StudentRegistration() {
   const handleConfirmAndProceed = async () => {
     setSubmitting(true);
 
+    // Calculate projected batch number for Warri registrations
+    const projectedBatchNumber = formData.preferred_location_id === WARRI_LOCATION_ID && batchInfo
+      ? batchInfo.batchNumber
+      : null;
+
     const { data, error } = await supabase
       .from('student_registrations')
       .insert({
@@ -157,6 +225,8 @@ export default function StudentRegistration() {
         state: formData.state || null,
         lga: formData.lga || null,
         program_id: formData.program_id,
+        preferred_location_id: formData.preferred_location_id,
+        projected_batch_number: projectedBatchNumber,
         education_level: formData.education_level || null,
         current_income: formData.current_income || null,
         previous_experience: formData.previous_experience || null,
@@ -182,6 +252,8 @@ export default function StudentRegistration() {
   };
 
   const selectedProgram = programs.find(p => p.id === formData.program_id);
+  const selectedLocation = locations.find(l => l.id === formData.preferred_location_id);
+  const isWarriLocation = formData.preferred_location_id === WARRI_LOCATION_ID;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -192,7 +264,7 @@ export default function StudentRegistration() {
   };
 
   // Show summary step before final submission
-  if (step === 'summary' && selectedProgram) {
+  if (step === 'summary' && selectedProgram && selectedLocation) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -226,6 +298,33 @@ export default function StudentRegistration() {
                   <p className="text-sm text-muted-foreground">{formData.email}</p>
                   <p className="text-sm text-muted-foreground">{formData.phone}</p>
                 </div>
+
+                {/* Training Center */}
+                <div className="p-4 bg-secondary/50 rounded-lg">
+                  <div className="flex items-center gap-2 text-foreground">
+                    <MapPin className="w-4 h-4 text-primary" />
+                    <span className="font-medium">{selectedLocation.name}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground ml-6">
+                    {selectedLocation.city}, {selectedLocation.state}
+                  </p>
+                </div>
+
+                {/* Batch Info for Warri */}
+                {isWarriLocation && batchInfo && (
+                  <div className="p-4 border-2 border-primary/30 rounded-lg bg-primary/5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users className="w-5 h-5 text-primary" />
+                      <span className="font-semibold text-foreground">Batch Assignment</span>
+                    </div>
+                    <p className="text-lg font-bold text-primary">
+                      You will be in Batch {batchInfo.batchNumber}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Currently {batchInfo.currentCount}/15 students enrolled in this batch
+                    </p>
+                  </div>
+                )}
 
                 {/* Program Summary */}
                 <div className="p-4 border border-primary/20 rounded-lg bg-primary/5">
@@ -529,34 +628,93 @@ export default function StudentRegistration() {
                     </div>
                   </div>
 
+                  {/* Training Center Selection */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Preferred Training Center</h3>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="preferred_location_id">Select Training Center *</Label>
+                        <Select
+                          value={formData.preferred_location_id}
+                          onValueChange={(value) => handleChange('preferred_location_id', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose a training center" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {locations.map((location) => (
+                              <SelectItem key={location.id} value={location.id}>
+                                <span className="flex items-center gap-2">
+                                  <MapPin className="w-4 h-4 text-primary" />
+                                  {location.name} - {location.city}, {location.state}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.preferred_location_id && <p className="text-sm text-destructive">{errors.preferred_location_id}</p>}
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Program Selection */}
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-4">Preferred Skill Training</h3>
-                    <div className="space-y-2">
-                      <Label htmlFor="program_id">Select Program *</Label>
-                      <Select
-                        value={formData.program_id}
-                        onValueChange={(value) => handleChange('program_id', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose a program" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {programs.map((program) => (
-                            <SelectItem key={program.id} value={program.id}>
-                              <span className="flex items-center gap-2">
-                                {program.category === 'software' ? (
-                                  <Monitor className="w-4 h-4 text-blue-500" />
-                                ) : (
-                                  <Cpu className="w-4 h-4 text-green-500" />
-                                )}
-                                {program.name} - {program.duration} {program.duration_unit} ({formatCurrency(program.tuition_fee)})
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {errors.program_id && <p className="text-sm text-destructive">{errors.program_id}</p>}
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="program_id">Select Program *</Label>
+                        <Select
+                          value={formData.program_id}
+                          onValueChange={(value) => handleChange('program_id', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose a program" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {programs.map((program) => (
+                              <SelectItem key={program.id} value={program.id}>
+                                <span className="flex items-center gap-2">
+                                  {program.category === 'software' ? (
+                                    <Monitor className="w-4 h-4 text-blue-500" />
+                                  ) : (
+                                    <Cpu className="w-4 h-4 text-green-500" />
+                                  )}
+                                  {program.name} - {program.duration} {program.duration_unit} ({formatCurrency(program.tuition_fee)})
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.program_id && <p className="text-sm text-destructive">{errors.program_id}</p>}
+                      </div>
+
+                      {/* Batch Info Display for Warri */}
+                      {isWarriLocation && formData.program_id && (
+                        <div className="p-4 border-2 border-primary/30 rounded-lg bg-primary/5">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Users className="w-5 h-5 text-primary" />
+                            <span className="font-semibold text-foreground">Batch Assignment Preview</span>
+                          </div>
+                          {loadingBatch ? (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span>Calculating your batch...</span>
+                            </div>
+                          ) : batchInfo ? (
+                            <>
+                              <p className="text-lg font-bold text-primary">
+                                You will be assigned to Batch {batchInfo.batchNumber}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Currently {batchInfo.currentCount}/15 paid students in this batch for {selectedProgram?.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-2">
+                                Note: Your batch is confirmed after payment. Each batch starts when 15 students have paid.
+                              </p>
+                            </>
+                          ) : null}
+                        </div>
+                      )}
                     </div>
                   </div>
 
