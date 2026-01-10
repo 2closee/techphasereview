@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Clock, CreditCard, Award, Calendar, Loader2, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Clock, CreditCard, Award, Calendar, Loader2, CheckCircle2, Users, MapPin } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
+
+const WARRI_LOCATION_ID = 'af2ca449-9394-46dd-b4b3-216bb50e9aeb';
 
 interface StudentRegistration {
   id: string;
@@ -16,6 +18,9 @@ interface StudentRegistration {
   program_id: string;
   payment_status: string;
   created_at: string;
+  preferred_location_id: string | null;
+  batch_id: string | null;
+  projected_batch_number: number | null;
   programs: {
     id: string;
     name: string;
@@ -25,6 +30,21 @@ interface StudentRegistration {
     tuition_fee: number;
     start_date: string | null;
   } | null;
+  training_locations: {
+    id: string;
+    name: string;
+    city: string;
+    state: string;
+  } | null;
+}
+
+interface BatchInfo {
+  id: string;
+  batch_number: number;
+  current_count: number;
+  max_students: number;
+  status: string;
+  start_date: string | null;
 }
 
 interface Payment {
@@ -59,6 +79,7 @@ export default function StudentDashboard() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [registration, setRegistration] = useState<StudentRegistration | null>(null);
+  const [batchInfo, setBatchInfo] = useState<BatchInfo | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [courseProgress, setCourseProgress] = useState<CourseProgress | null>(null);
   const [upcomingSessions, setUpcomingSessions] = useState<UpcomingSession[]>([]);
@@ -73,7 +94,7 @@ export default function StudentDashboard() {
     if (!user) return;
 
     try {
-      // Fetch student registration with program details
+      // Fetch student registration with program and location details
       const { data: regData, error: regError } = await supabase
         .from('student_registrations')
         .select(`
@@ -84,6 +105,9 @@ export default function StudentDashboard() {
           program_id,
           payment_status,
           created_at,
+          preferred_location_id,
+          batch_id,
+          projected_batch_number,
           programs:program_id (
             id,
             name,
@@ -92,6 +116,12 @@ export default function StudentDashboard() {
             duration_unit,
             tuition_fee,
             start_date
+          ),
+          training_locations:preferred_location_id (
+            id,
+            name,
+            city,
+            state
           )
         `)
         .eq('user_id', user.id)
@@ -99,6 +129,29 @@ export default function StudentDashboard() {
 
       if (regData) {
         setRegistration(regData as StudentRegistration);
+
+        // Fetch batch info if student has a batch assignment or is at Warri
+        if (regData.batch_id) {
+          const { data: batchData } = await supabase
+            .from('course_batches')
+            .select('id, batch_number, current_count, max_students, status, start_date')
+            .eq('id', regData.batch_id)
+            .single();
+
+          if (batchData) {
+            setBatchInfo(batchData);
+          }
+        } else if (regData.preferred_location_id === WARRI_LOCATION_ID && regData.projected_batch_number) {
+          // Show projected batch info for unpaid Warri students
+          setBatchInfo({
+            id: 'projected',
+            batch_number: regData.projected_batch_number,
+            current_count: 0,
+            max_students: 15,
+            status: 'projected',
+            start_date: null
+          });
+        }
 
         // Fetch payments for this student
         const { data: paymentData } = await supabase
@@ -258,6 +311,49 @@ export default function StudentDashboard() {
             </Card>
           ))}
         </div>
+
+        {/* Batch Info for Warri Students */}
+        {registration.preferred_location_id === WARRI_LOCATION_ID && batchInfo && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <Users className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-foreground">
+                      Batch {batchInfo.batch_number}
+                    </p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {registration.training_locations?.name || 'Warri Center'}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  {batchInfo.status === 'projected' ? (
+                    <span className="text-sm text-orange-500 font-medium">Pending Payment</span>
+                  ) : batchInfo.status === 'open' ? (
+                    <>
+                      <p className="text-sm font-medium text-foreground">{batchInfo.current_count}/{batchInfo.max_students} students</p>
+                      <p className="text-xs text-muted-foreground">Batch filling up</p>
+                    </>
+                  ) : batchInfo.status === 'full' ? (
+                    <span className="text-sm text-green-500 font-medium">Batch Complete!</span>
+                  ) : (
+                    <span className="text-sm text-primary font-medium capitalize">{batchInfo.status}</span>
+                  )}
+                  {batchInfo.start_date && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Starts: {format(new Date(batchInfo.start_date), 'MMM d, yyyy')}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Program and Schedule */}
         <div className="grid gap-6 lg:grid-cols-3">
