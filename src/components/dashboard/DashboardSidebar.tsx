@@ -18,6 +18,7 @@ import {
   ChefHat,
   Scissors,
   Layers,
+  Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -31,6 +32,7 @@ const adminNavItems: NavItem[] = [
   { title: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { title: 'Students', href: '/admin/students', icon: Users },
   { title: 'Teachers', href: '/admin/teachers', icon: GraduationCap },
+  { title: 'Staff', href: '/admin/staff', icon: Shield },
   { title: 'Programs', href: '/admin/programs', icon: BookOpen },
   { title: 'Batches', href: '/admin/batches', icon: Layers },
   { title: 'Sessions', href: '/admin/sessions', icon: Calendar },
