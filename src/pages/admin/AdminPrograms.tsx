@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Monitor, Cpu, BookOpen, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Monitor, Cpu, BookOpen, Loader2, MapPin } from 'lucide-react';
 import { z } from 'zod';
 
 const programSchema = z.object({
@@ -41,6 +42,19 @@ type Program = {
   created_at: string;
 };
 
+type TrainingLocation = {
+  id: string;
+  name: string;
+  city: string;
+  state: string;
+};
+
+type LocationProgram = {
+  location_id: string;
+  program_id: string;
+  is_active: boolean;
+};
+
 type ProgramFormData = z.infer<typeof programSchema>;
 
 const defaultFormData: ProgramFormData = {
@@ -57,29 +71,58 @@ const defaultFormData: ProgramFormData = {
 
 export default function AdminPrograms() {
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [locations, setLocations] = useState<TrainingLocation[]>([]);
+  const [locationPrograms, setLocationPrograms] = useState<LocationProgram[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [locationsDialogOpen, setLocationsDialogOpen] = useState(false);
+  const [selectedProgramForLocations, setSelectedProgramForLocations] = useState<Program | null>(null);
+  const [selectedLocationIds, setSelectedLocationIds] = useState<string[]>([]);
+  const [savingLocations, setSavingLocations] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
   const [formData, setFormData] = useState<ProgramFormData>(defaultFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetchPrograms();
+    fetchData();
   }, []);
 
-  const fetchPrograms = async () => {
+  const fetchData = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('programs')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const [programsResult, locationsResult, locationProgramsResult] = await Promise.all([
+      supabase
+        .from('programs')
+        .select('*')
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('training_locations')
+        .select('id, name, city, state')
+        .eq('is_active', true)
+        .order('name', { ascending: true }),
+      supabase
+        .from('location_programs')
+        .select('location_id, program_id, is_active')
+    ]);
     
-    if (error) {
+    if (programsResult.error) {
       toast.error('Failed to load programs');
     } else {
-      setPrograms((data || []) as Program[]);
+      setPrograms((programsResult.data || []) as Program[]);
     }
+
+    if (locationsResult.error) {
+      toast.error('Failed to load locations');
+    } else {
+      setLocations(locationsResult.data || []);
+    }
+
+    if (locationProgramsResult.error) {
+      toast.error('Failed to load location assignments');
+    } else {
+      setLocationPrograms(locationProgramsResult.data || []);
+    }
+
     setLoading(false);
   };
 
@@ -103,6 +146,80 @@ export default function AdminPrograms() {
     }
     setErrors({});
     setDialogOpen(true);
+  };
+
+  const handleOpenLocationsDialog = (program: Program) => {
+    setSelectedProgramForLocations(program);
+    // Get currently assigned locations for this program
+    const assignedLocationIds = locationPrograms
+      .filter(lp => lp.program_id === program.id && lp.is_active)
+      .map(lp => lp.location_id);
+    setSelectedLocationIds(assignedLocationIds);
+    setLocationsDialogOpen(true);
+  };
+
+  const handleLocationToggle = (locationId: string) => {
+    setSelectedLocationIds(prev => 
+      prev.includes(locationId)
+        ? prev.filter(id => id !== locationId)
+        : [...prev, locationId]
+    );
+  };
+
+  const handleSaveLocations = async () => {
+    if (!selectedProgramForLocations) return;
+
+    setSavingLocations(true);
+    const programId = selectedProgramForLocations.id;
+
+    // Get current assignments for this program
+    const currentAssignments = locationPrograms.filter(lp => lp.program_id === programId);
+    const currentLocationIds = currentAssignments.map(lp => lp.location_id);
+
+    // Determine which to add and which to remove
+    const toAdd = selectedLocationIds.filter(id => !currentLocationIds.includes(id));
+    const toRemove = currentLocationIds.filter(id => !selectedLocationIds.includes(id));
+
+    try {
+      // Remove deselected locations
+      if (toRemove.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('location_programs')
+          .delete()
+          .eq('program_id', programId)
+          .in('location_id', toRemove);
+        
+        if (deleteError) throw deleteError;
+      }
+
+      // Add new locations
+      if (toAdd.length > 0) {
+        const insertData = toAdd.map(locationId => ({
+          program_id: programId,
+          location_id: locationId,
+          is_active: true
+        }));
+
+        const { error: insertError } = await supabase
+          .from('location_programs')
+          .insert(insertData);
+        
+        if (insertError) throw insertError;
+      }
+
+      toast.success('Location assignments updated');
+      setLocationsDialogOpen(false);
+      fetchData(); // Refresh data
+    } catch (error) {
+      console.error('Error saving locations:', error);
+      toast.error('Failed to update location assignments');
+    } finally {
+      setSavingLocations(false);
+    }
+  };
+
+  const getAssignedLocationsCount = (programId: string) => {
+    return locationPrograms.filter(lp => lp.program_id === programId && lp.is_active).length;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -146,7 +263,7 @@ export default function AdminPrograms() {
       } else {
         toast.success('Program updated successfully');
         setDialogOpen(false);
-        fetchPrograms();
+        fetchData();
       }
     } else {
       const { error } = await supabase
@@ -158,7 +275,7 @@ export default function AdminPrograms() {
       } else {
         toast.success('Program created successfully');
         setDialogOpen(false);
-        fetchPrograms();
+        fetchData();
       }
     }
 
@@ -177,7 +294,7 @@ export default function AdminPrograms() {
       toast.error('Failed to delete program');
     } else {
       toast.success('Program deleted');
-      fetchPrograms();
+      fetchData();
     }
   };
 
@@ -344,6 +461,66 @@ export default function AdminPrograms() {
           </Dialog>
         </div>
 
+        {/* Locations Assignment Dialog */}
+        <Dialog open={locationsDialogOpen} onOpenChange={setLocationsDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Assign Training Centers</DialogTitle>
+              <DialogDescription>
+                Select which training centers offer "{selectedProgramForLocations?.name}"
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              {locations.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">
+                  No training centers available. Add centers first.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {locations.map((location) => (
+                    <div
+                      key={location.id}
+                      className="flex items-center gap-3 p-3 border rounded-lg hover:bg-secondary/50 transition-colors"
+                    >
+                      <Checkbox
+                        id={`location-${location.id}`}
+                        checked={selectedLocationIds.includes(location.id)}
+                        onCheckedChange={() => handleLocationToggle(location.id)}
+                      />
+                      <label
+                        htmlFor={`location-${location.id}`}
+                        className="flex-1 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-primary" />
+                          <span className="font-medium">{location.name}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground ml-6">
+                          {location.city}, {location.state}
+                        </p>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button type="button" variant="outline" onClick={() => setLocationsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  variant="gold" 
+                  onClick={handleSaveLocations}
+                  disabled={savingLocations}
+                >
+                  {savingLocations && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Save Assignments
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Programs Grid */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -419,7 +596,23 @@ export default function AdminPrograms() {
                         <span className="font-medium">{program.max_students}</span>
                       </div>
                     )}
+                    <div className="flex justify-between items-center pt-2 border-t">
+                      <span className="text-muted-foreground">Training Centers</span>
+                      <Badge variant="outline" className="gap-1">
+                        <MapPin className="w-3 h-3" />
+                        {getAssignedLocationsCount(program.id)}
+                      </Badge>
+                    </div>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-4"
+                    onClick={() => handleOpenLocationsDialog(program)}
+                  >
+                    <MapPin className="w-4 h-4 mr-2" />
+                    Manage Locations
+                  </Button>
                 </CardContent>
               </Card>
             ))}
