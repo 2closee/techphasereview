@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { GraduationCap, Loader2, ArrowLeft, Monitor, Cpu, CheckCircle2, MapPin, Users } from 'lucide-react';
+import { GraduationCap, Loader2, ArrowLeft, Monitor, Cpu, CheckCircle2, MapPin, Users, UserCheck } from 'lucide-react';
 import { z } from 'zod';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
@@ -33,6 +34,12 @@ const registrationSchema = z.object({
   previous_experience: z.string().trim().max(500).optional(),
   program_id: z.string().uuid('Please select a preferred skill training'),
   preferred_location_id: z.string().uuid('Please select a training center'),
+  can_attend_weekly: z.enum(['yes', 'no', 'maybe'], { required_error: 'Please indicate if you can attend weekly' }),
+  guarantor_full_name: z.string().trim().min(2, 'Guarantor name is required').max(100),
+  guarantor_address: z.string().trim().min(5, 'Guarantor address is required').max(200),
+  guarantor_phone: z.string().trim().min(10, 'Guarantor phone must be at least 10 digits').max(15),
+  guarantor_email: z.string().trim().email('Invalid guarantor email').max(100),
+  terms_accepted: z.literal(true, { errorMap: () => ({ message: 'You must accept the terms and conditions' }) }),
 });
 
 type RegistrationFormData = z.infer<typeof registrationSchema>;
@@ -90,6 +97,12 @@ export default function StudentRegistration() {
     previous_experience: '',
     program_id: '',
     preferred_location_id: '',
+    can_attend_weekly: undefined,
+    guarantor_full_name: '',
+    guarantor_address: '',
+    guarantor_phone: '',
+    guarantor_email: '',
+    terms_accepted: undefined,
   });
 
   useEffect(() => {
@@ -160,7 +173,7 @@ export default function StudentRegistration() {
     }
   };
 
-  const handleChange = (field: keyof RegistrationFormData, value: string) => {
+  const handleChange = (field: keyof RegistrationFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -230,6 +243,12 @@ export default function StudentRegistration() {
         education_level: formData.education_level || null,
         current_income: formData.current_income || null,
         previous_experience: formData.previous_experience || null,
+        can_attend_weekly: formData.can_attend_weekly || null,
+        guarantor_full_name: formData.guarantor_full_name || null,
+        guarantor_address: formData.guarantor_address || null,
+        guarantor_phone: formData.guarantor_phone || null,
+        guarantor_email: formData.guarantor_email || null,
+        terms_accepted: formData.terms_accepted || false,
         payment_status: 'unpaid',
         status: 'pending',
       })
@@ -716,6 +735,96 @@ export default function StudentRegistration() {
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Attendance Commitment */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Attendance Commitment</h3>
+                    <div className="space-y-2">
+                      <Label htmlFor="can_attend_weekly">Can you attend a course 2-3 times weekly, for 6 months? *</Label>
+                      <Select
+                        value={formData.can_attend_weekly}
+                        onValueChange={(value) => handleChange('can_attend_weekly', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your answer" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                          <SelectItem value="maybe">Maybe</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.can_attend_weekly && <p className="text-sm text-destructive">{errors.can_attend_weekly}</p>}
+                    </div>
+                  </div>
+
+                  {/* Guarantor Section */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                      <UserCheck className="w-5 h-5 text-primary" />
+                      Guarantor's Information
+                    </h3>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2 sm:col-span-2">
+                        <Label htmlFor="guarantor_full_name">Guarantor's Full Name *</Label>
+                        <Input
+                          id="guarantor_full_name"
+                          value={formData.guarantor_full_name}
+                          onChange={(e) => handleChange('guarantor_full_name', e.target.value)}
+                          placeholder="Enter guarantor's full name"
+                        />
+                        {errors.guarantor_full_name && <p className="text-sm text-destructive">{errors.guarantor_full_name}</p>}
+                      </div>
+                      <div className="space-y-2 sm:col-span-2">
+                        <Label htmlFor="guarantor_address">Guarantor's Address *</Label>
+                        <Input
+                          id="guarantor_address"
+                          value={formData.guarantor_address}
+                          onChange={(e) => handleChange('guarantor_address', e.target.value)}
+                          placeholder="Enter guarantor's address"
+                        />
+                        {errors.guarantor_address && <p className="text-sm text-destructive">{errors.guarantor_address}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="guarantor_phone">Guarantor's Phone Number *</Label>
+                        <Input
+                          id="guarantor_phone"
+                          type="tel"
+                          value={formData.guarantor_phone}
+                          onChange={(e) => handleChange('guarantor_phone', e.target.value)}
+                          placeholder="+234 800 000 0000"
+                        />
+                        {errors.guarantor_phone && <p className="text-sm text-destructive">{errors.guarantor_phone}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="guarantor_email">Guarantor's Email Address *</Label>
+                        <Input
+                          id="guarantor_email"
+                          type="email"
+                          value={formData.guarantor_email}
+                          onChange={(e) => handleChange('guarantor_email', e.target.value)}
+                          placeholder="guarantor@example.com"
+                        />
+                        {errors.guarantor_email && <p className="text-sm text-destructive">{errors.guarantor_email}</p>}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Terms and Conditions */}
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    <div className="flex items-start space-x-3">
+                      <Checkbox
+                        id="terms_accepted"
+                        checked={formData.terms_accepted === true}
+                        onCheckedChange={(checked) => handleChange('terms_accepted', checked === true)}
+                        className="mt-1"
+                      />
+                      <Label htmlFor="terms_accepted" className="text-sm leading-relaxed cursor-pointer">
+                        Yes, I agree with the <a href="/privacy-policy" target="_blank" className="text-primary hover:underline">privacy policy</a> and <a href="/terms-and-conditions" target="_blank" className="text-primary hover:underline">terms and conditions</a>
+                      </Label>
+                    </div>
+                    {errors.terms_accepted && <p className="text-sm text-destructive">{errors.terms_accepted}</p>}
                   </div>
 
                   <div className="pt-4">
