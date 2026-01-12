@@ -2008,6 +2008,7 @@ export type Database = {
           address: string | null
           alternative_phone: string | null
           batch_id: string | null
+          can_attend_weekly: string | null
           city: string | null
           country: string | null
           created_at: string | null
@@ -2019,6 +2020,10 @@ export type Database = {
           emergency_contact_phone: string | null
           first_name: string
           gender: string | null
+          guarantor_address: string | null
+          guarantor_email: string | null
+          guarantor_full_name: string | null
+          guarantor_phone: string | null
           how_heard_about_us: string | null
           id: string
           is_pwd: string | null
@@ -2036,6 +2041,7 @@ export type Database = {
           reviewed_by: string | null
           state: string | null
           status: string | null
+          terms_accepted: boolean | null
           updated_at: string | null
           user_id: string | null
         }
@@ -2044,6 +2050,7 @@ export type Database = {
           address?: string | null
           alternative_phone?: string | null
           batch_id?: string | null
+          can_attend_weekly?: string | null
           city?: string | null
           country?: string | null
           created_at?: string | null
@@ -2055,6 +2062,10 @@ export type Database = {
           emergency_contact_phone?: string | null
           first_name: string
           gender?: string | null
+          guarantor_address?: string | null
+          guarantor_email?: string | null
+          guarantor_full_name?: string | null
+          guarantor_phone?: string | null
           how_heard_about_us?: string | null
           id?: string
           is_pwd?: string | null
@@ -2072,6 +2083,7 @@ export type Database = {
           reviewed_by?: string | null
           state?: string | null
           status?: string | null
+          terms_accepted?: boolean | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -2080,6 +2092,7 @@ export type Database = {
           address?: string | null
           alternative_phone?: string | null
           batch_id?: string | null
+          can_attend_weekly?: string | null
           city?: string | null
           country?: string | null
           created_at?: string | null
@@ -2091,6 +2104,10 @@ export type Database = {
           emergency_contact_phone?: string | null
           first_name?: string
           gender?: string | null
+          guarantor_address?: string | null
+          guarantor_email?: string | null
+          guarantor_full_name?: string | null
+          guarantor_phone?: string | null
           how_heard_about_us?: string | null
           id?: string
           is_pwd?: string | null
@@ -2108,6 +2125,7 @@ export type Database = {
           reviewed_by?: string | null
           state?: string | null
           status?: string | null
+          terms_accepted?: boolean | null
           updated_at?: string | null
           user_id?: string | null
         }
