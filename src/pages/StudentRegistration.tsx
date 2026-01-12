@@ -51,6 +51,7 @@ type Program = {
   duration: string;
   duration_unit: string;
   tuition_fee: number;
+  is_active: boolean;
 };
 
 type TrainingLocation = {
@@ -106,8 +107,17 @@ export default function StudentRegistration() {
   });
 
   useEffect(() => {
-    fetchData();
+    fetchLocations();
   }, []);
+
+  // Fetch programs when location changes
+  useEffect(() => {
+    if (formData.preferred_location_id) {
+      fetchProgramsForLocation(formData.preferred_location_id);
+    } else {
+      setPrograms([]);
+    }
+  }, [formData.preferred_location_id]);
 
   // Fetch batch info when Warri is selected with a program
   useEffect(() => {
@@ -118,33 +128,54 @@ export default function StudentRegistration() {
     }
   }, [formData.preferred_location_id, formData.program_id]);
 
-  const fetchData = async () => {
-    const [programsResult, locationsResult] = await Promise.all([
-      supabase
-        .from('programs')
-        .select('id, name, category, duration, duration_unit, tuition_fee')
-        .eq('is_active', true)
-        .order('category', { ascending: true }),
-      supabase
-        .from('training_locations')
-        .select('id, name, city, state')
-        .eq('is_active', true)
-        .order('name', { ascending: true })
-    ]);
-    
-    if (programsResult.error) {
-      toast.error('Failed to load programs');
-    } else {
-      setPrograms(programsResult.data || []);
-    }
+  const fetchLocations = async () => {
+    const { data, error } = await supabase
+      .from('training_locations')
+      .select('id, name, city, state')
+      .eq('is_active', true)
+      .order('name', { ascending: true });
 
-    if (locationsResult.error) {
+    if (error) {
       toast.error('Failed to load training locations');
     } else {
-      setLocations(locationsResult.data || []);
+      setLocations(data || []);
     }
-    
     setLoading(false);
+  };
+
+  const fetchProgramsForLocation = async (locationId: string) => {
+    // Clear current program selection when location changes
+    if (formData.program_id) {
+      setFormData(prev => ({ ...prev, program_id: '' }));
+    }
+
+    const { data, error } = await supabase
+      .from('location_programs')
+      .select(`
+        program_id,
+        programs:program_id (
+          id,
+          name,
+          category,
+          duration,
+          duration_unit,
+          tuition_fee,
+          is_active
+        )
+      `)
+      .eq('location_id', locationId)
+      .eq('is_active', true);
+
+    if (error) {
+      toast.error('Failed to load programs for this location');
+      setPrograms([]);
+    } else {
+      // Extract programs from the join result and filter active ones
+      const availablePrograms = (data || [])
+        .map(item => item.programs as unknown as Program)
+        .filter(program => program && program.is_active);
+      setPrograms(availablePrograms);
+    }
   };
 
   const fetchBatchInfo = async (programId: string) => {
@@ -422,9 +453,13 @@ export default function StudentRegistration() {
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
+              ) : !formData.preferred_location_id ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">Please select a training center to view available programs.</p>
+                </div>
               ) : programs.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">No programs available at the moment.</p>
+                  <p className="text-muted-foreground">No programs available at the selected location.</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6 mt-4">

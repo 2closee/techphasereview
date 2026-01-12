@@ -835,6 +835,45 @@ export type Database = {
           },
         ]
       }
+      location_programs: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          location_id: string
+          program_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location_id: string
+          program_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location_id?: string
+          program_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_programs_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "training_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "location_programs_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       logistics_provider_settings: {
         Row: {
           auto_assign: boolean | null
