@@ -395,7 +395,7 @@ export default function StudentRegistration() {
               </div>
               <CardTitle className="text-2xl font-display">Student Registration</CardTitle>
               <CardDescription>
-                Apply to join Topearl International Institute
+                Apply to join Meranos Hub
               </CardDescription>
             </CardHeader>
             <CardContent>
