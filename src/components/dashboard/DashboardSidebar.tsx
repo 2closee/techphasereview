@@ -19,6 +19,7 @@ import {
   Scissors,
   Layers,
   Shield,
+  MapPin,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -34,6 +35,7 @@ const adminNavItems: NavItem[] = [
   { title: 'Teachers', href: '/admin/teachers', icon: GraduationCap },
   { title: 'Staff', href: '/admin/staff', icon: Shield },
   { title: 'Programs', href: '/admin/programs', icon: BookOpen },
+  { title: 'Locations', href: '/admin/locations', icon: MapPin },
   { title: 'Batches', href: '/admin/batches', icon: Layers },
   { title: 'Sessions', href: '/admin/sessions', icon: Calendar },
   { title: 'Attendance', href: '/admin/attendance', icon: ClipboardList },
