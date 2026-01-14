@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -51,6 +51,7 @@ type Program = {
   duration: string;
   duration_unit: string;
   tuition_fee: number;
+  registration_fee: number | null;
   is_active: boolean;
 };
 
@@ -71,6 +72,8 @@ const NIGERIAN_STATES = [
 
 export default function StudentRegistration() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preSelectedProgramId = searchParams.get('program_id');
   const [programs, setPrograms] = useState<Program[]>([]);
   const [locations, setLocations] = useState<TrainingLocation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,6 +113,13 @@ export default function StudentRegistration() {
     fetchLocations();
   }, []);
 
+  // Handle pre-selected program from URL
+  useEffect(() => {
+    if (preSelectedProgramId && locations.length > 0) {
+      fetchLocationForProgram(preSelectedProgramId);
+    }
+  }, [preSelectedProgramId, locations]);
+
   // Fetch programs when location changes
   useEffect(() => {
     if (formData.preferred_location_id) {
@@ -143,6 +153,25 @@ export default function StudentRegistration() {
     setLoading(false);
   };
 
+  const fetchLocationForProgram = async (programId: string) => {
+    // Find a location that offers this program
+    const { data, error } = await supabase
+      .from('location_programs')
+      .select('location_id')
+      .eq('program_id', programId)
+      .eq('is_active', true)
+      .limit(1);
+
+    if (!error && data && data.length > 0) {
+      const locationId = data[0].location_id;
+      // Only set location if it's active
+      const matchingLocation = locations.find(l => l.id === locationId);
+      if (matchingLocation) {
+        setFormData(prev => ({ ...prev, preferred_location_id: locationId, program_id: programId }));
+      }
+    }
+  };
+
   const fetchProgramsForLocation = async (locationId: string) => {
     // Clear current program selection when location changes
     if (formData.program_id) {
@@ -160,6 +189,7 @@ export default function StudentRegistration() {
           duration,
           duration_unit,
           tuition_fee,
+          registration_fee,
           is_active
         )
       `)
@@ -391,11 +421,25 @@ export default function StudentRegistration() {
                       </p>
                     </div>
                   </div>
-                  <div className="border-t border-primary/10 pt-3 mt-3">
+                  <div className="border-t border-primary/10 pt-3 mt-3 space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Tuition Fee</span>
-                      <span className="text-xl font-bold text-primary">
+                      <span className="font-semibold text-foreground">
                         {formatCurrency(selectedProgram.tuition_fee)}
+                      </span>
+                    </div>
+                    {selectedProgram.registration_fee && selectedProgram.registration_fee > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Registration Fee</span>
+                        <span className="font-semibold text-foreground">
+                          {formatCurrency(selectedProgram.registration_fee)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center pt-2 border-t border-primary/10">
+                      <span className="font-semibold text-foreground">Total Cost</span>
+                      <span className="text-xl font-bold text-primary">
+                        {formatCurrency(selectedProgram.tuition_fee + (selectedProgram.registration_fee || 0))}
                       </span>
                     </div>
                   </div>
