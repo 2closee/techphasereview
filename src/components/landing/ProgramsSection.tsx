@@ -4,6 +4,7 @@ import { Clock, Award, ArrowRight, BookOpen } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigate } from "react-router-dom";
 
 const gradientColors = [
   "from-blue-500 to-cyan-500",
@@ -15,6 +16,8 @@ const gradientColors = [
 ];
 
 const ProgramsSection = () => {
+  const navigate = useNavigate();
+  
   const { data: programs, isLoading } = useQuery({
     queryKey: ['active-programs'],
     queryFn: async () => {
@@ -103,8 +106,15 @@ const ProgramsSection = () => {
                       <span className="text-sm font-medium text-foreground font-body">{program.category}</span>
                     </div>
                     
-                    <div className="text-sm text-muted-foreground font-body">
-                      <span className="font-semibold text-foreground">Tuition:</span> {formatCurrency(Number(program.tuition_fee))}
+                    <div className="space-y-1">
+                      <div className="text-sm text-muted-foreground font-body">
+                        <span className="font-semibold text-foreground">Tuition:</span> {formatCurrency(Number(program.tuition_fee))}
+                      </div>
+                      {program.registration_fee && Number(program.registration_fee) > 0 && (
+                        <div className="text-sm text-muted-foreground font-body">
+                          <span className="font-semibold text-foreground">Registration Fee:</span> {formatCurrency(Number(program.registration_fee))}
+                        </div>
+                      )}
                     </div>
 
                     {program.requirements && program.requirements.length > 0 && (
@@ -118,7 +128,11 @@ const ProgramsSection = () => {
                       </ul>
                     )}
 
-                    <Button variant="outline" className="w-full mt-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <Button 
+                      variant="outline" 
+                      className="w-full mt-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                      onClick={() => navigate(`/register?program_id=${program.id}`)}
+                    >
                       Learn More
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Button>
