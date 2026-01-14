@@ -453,15 +453,45 @@ export default function StudentRegistration() {
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
-              ) : !formData.preferred_location_id ? (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">Please select a training center to view available programs.</p>
-                </div>
-              ) : programs.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">No programs available at the selected location.</p>
-                </div>
               ) : (
+                <>
+                  {/* Training Center Selection - Always visible first */}
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Select Training Center</h3>
+                    <div className="space-y-2">
+                      <Label htmlFor="preferred_location_id_top">Training Center *</Label>
+                      <Select
+                        value={formData.preferred_location_id}
+                        onValueChange={(value) => handleChange('preferred_location_id', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose a training center" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {locations.map((location) => (
+                            <SelectItem key={location.id} value={location.id}>
+                              <span className="flex items-center gap-2">
+                                <MapPin className="w-4 h-4 text-primary" />
+                                {location.name} - {location.city}, {location.state}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.preferred_location_id && <p className="text-sm text-destructive">{errors.preferred_location_id}</p>}
+                    </div>
+                  </div>
+
+                  {!formData.preferred_location_id ? (
+                    <div className="text-center py-12 border-t">
+                      <MapPin className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                      <p className="text-muted-foreground">Please select a training center above to view available programs and continue registration.</p>
+                    </div>
+                  ) : programs.length === 0 ? (
+                    <div className="text-center py-12 border-t">
+                      <p className="text-muted-foreground">No programs are currently available at the selected location.</p>
+                    </div>
+                  ) : (
                 <form onSubmit={handleSubmit} className="space-y-6 mt-4">
                   {/* Personal Information */}
                   <div>
@@ -682,35 +712,6 @@ export default function StudentRegistration() {
                     </div>
                   </div>
 
-                  {/* Training Center Selection */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Preferred Training Center</h3>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="preferred_location_id">Select Training Center *</Label>
-                        <Select
-                          value={formData.preferred_location_id}
-                          onValueChange={(value) => handleChange('preferred_location_id', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose a training center" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {locations.map((location) => (
-                              <SelectItem key={location.id} value={location.id}>
-                                <span className="flex items-center gap-2">
-                                  <MapPin className="w-4 h-4 text-primary" />
-                                  {location.name} - {location.city}, {location.state}
-                                </span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {errors.preferred_location_id && <p className="text-sm text-destructive">{errors.preferred_location_id}</p>}
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Program Selection */}
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-4">Preferred Skill Training</h3>
@@ -869,6 +870,8 @@ export default function StudentRegistration() {
                     </Button>
                   </div>
                 </form>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
