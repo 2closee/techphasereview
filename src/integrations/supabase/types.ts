@@ -1142,6 +1142,7 @@ export type Database = {
           is_active: boolean | null
           max_students: number | null
           name: string
+          program_code: number | null
           registration_fee: number | null
           requirements: string[] | null
           start_date: string | null
@@ -1160,6 +1161,7 @@ export type Database = {
           is_active?: boolean | null
           max_students?: number | null
           name: string
+          program_code?: number | null
           registration_fee?: number | null
           requirements?: string[] | null
           start_date?: string | null
@@ -1178,6 +1180,7 @@ export type Database = {
           is_active?: boolean | null
           max_students?: number | null
           name?: string
+          program_code?: number | null
           registration_fee?: number | null
           requirements?: string[] | null
           start_date?: string | null
@@ -2068,6 +2071,7 @@ export type Database = {
           is_pwd: string | null
           last_name: string
           lga: string | null
+          matriculation_number: string | null
           middle_name: string | null
           notes: string | null
           payment_status: string
@@ -2110,6 +2114,7 @@ export type Database = {
           is_pwd?: string | null
           last_name: string
           lga?: string | null
+          matriculation_number?: string | null
           middle_name?: string | null
           notes?: string | null
           payment_status?: string
@@ -2152,6 +2157,7 @@ export type Database = {
           is_pwd?: string | null
           last_name?: string
           lga?: string | null
+          matriculation_number?: string | null
           middle_name?: string | null
           notes?: string | null
           payment_status?: string
@@ -2337,6 +2343,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           latitude: number
+          location_code: number | null
           longitude: number
           name: string
           phone: string | null
@@ -2353,6 +2360,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           latitude: number
+          location_code?: number | null
           longitude: number
           name: string
           phone?: string | null
@@ -2369,6 +2377,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           latitude?: number
+          location_code?: number | null
           longitude?: number
           name?: string
           phone?: string | null
@@ -2533,6 +2542,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_matriculation_number: {
+        Args: {
+          p_batch_id: string
+          p_batch_number: number
+          p_location_id: string
+          p_program_id: string
+        }
+        Returns: string
+      }
       get_public_repair_centers: {
         Args: never
         Returns: {
