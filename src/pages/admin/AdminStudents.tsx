@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors } from 'lucide-react';
+import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 
 type Registration = {
@@ -29,9 +29,15 @@ type Registration = {
   emergency_contact_phone: string | null;
   status: string;
   created_at: string;
+  matriculation_number: string | null;
+  payment_status: string;
   programs: {
     name: string;
     category: string;
+  } | null;
+  training_locations: {
+    name: string;
+    city: string;
   } | null;
 };
 
@@ -63,6 +69,10 @@ export default function AdminStudents() {
         programs (
           name,
           category
+        ),
+        training_locations:preferred_location_id (
+          name,
+          city
         )
       `)
       .order('created_at', { ascending: false });
@@ -191,6 +201,12 @@ export default function AdminStudents() {
                       <tr key={reg.id} className="hover:bg-secondary/30">
                         <td className="px-4 py-3">
                           <p className="font-medium text-foreground">{reg.first_name} {reg.last_name}</p>
+                          {reg.matriculation_number && (
+                            <p className="text-xs font-mono text-primary flex items-center gap-1 mt-0.5">
+                              <IdCard className="w-3 h-3" />
+                              {reg.matriculation_number}
+                            </p>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <p className="text-sm text-foreground">{reg.email}</p>
@@ -198,13 +214,21 @@ export default function AdminStudents() {
                         </td>
                         <td className="px-4 py-3">
                           {reg.programs ? (
-                            <div className="flex items-center gap-2">
-                              {reg.programs.category === 'culinary' ? (
-                                <ChefHat className="w-4 h-4 text-orange-500" />
-                              ) : (
-                                <Scissors className="w-4 h-4 text-pink-500" />
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                {reg.programs.category === 'culinary' ? (
+                                  <ChefHat className="w-4 h-4 text-orange-500" />
+                                ) : (
+                                  <Scissors className="w-4 h-4 text-pink-500" />
+                                )}
+                                <span className="text-sm">{reg.programs.name}</span>
+                              </div>
+                              {reg.training_locations && (
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <MapPin className="w-3 h-3" />
+                                  {reg.training_locations.name}
+                                </div>
                               )}
-                              <span className="text-sm">{reg.programs.name}</span>
                             </div>
                           ) : (
                             <span className="text-sm text-muted-foreground">Not selected</span>
@@ -253,6 +277,14 @@ export default function AdminStudents() {
                     <div>
                       <h3 className="text-xl font-semibold">{selectedRegistration.first_name} {selectedRegistration.last_name}</h3>
                       <p className="text-muted-foreground">{selectedRegistration.email}</p>
+                      {selectedRegistration.matriculation_number && (
+                        <div className="flex items-center gap-2 mt-2 px-3 py-1.5 bg-primary/10 rounded-md w-fit">
+                          <IdCard className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-mono font-semibold text-primary">
+                            Student ID: {selectedRegistration.matriculation_number}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <Badge className={statusColors[selectedRegistration.status]} variant="outline">
                       {selectedRegistration.status}

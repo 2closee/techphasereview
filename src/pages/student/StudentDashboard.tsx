@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Clock, CreditCard, Award, Calendar, Loader2, CheckCircle2, Users, MapPin } from 'lucide-react';
+import { BookOpen, Clock, CreditCard, Award, Calendar, Loader2, CheckCircle2, Users, MapPin, IdCard } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,6 +21,7 @@ interface StudentRegistration {
   preferred_location_id: string | null;
   batch_id: string | null;
   projected_batch_number: number | null;
+  matriculation_number: string | null;
   programs: {
     id: string;
     name: string;
@@ -108,6 +109,7 @@ export default function StudentDashboard() {
           preferred_location_id,
           batch_id,
           projected_batch_number,
+          matriculation_number,
           programs:program_id (
             id,
             name,
@@ -285,6 +287,14 @@ export default function StudentDashboard() {
                     ? `You're ${courseProgress.completion_percentage || 0}% through your program. Keep going!`
                     : "Your learning journey starts here!"}
                 </p>
+                {registration.matriculation_number && (
+                  <div className="flex items-center gap-2 mt-3 px-3 py-1.5 bg-primary/10 rounded-md w-fit">
+                    <IdCard className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-mono font-semibold text-primary">
+                      Student ID: {registration.matriculation_number}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="hidden md:block">
                 <Award className="w-16 h-16 text-purple-500/30" />

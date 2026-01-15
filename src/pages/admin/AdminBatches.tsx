@@ -31,6 +31,7 @@ interface Student {
   phone: string;
   payment_status: string;
   created_at: string;
+  matriculation_number: string | null;
 }
 
 interface Batch {
@@ -140,7 +141,7 @@ export default function AdminBatches() {
     try {
       const { data, error } = await supabase
         .from('student_registrations')
-        .select('id, first_name, last_name, email, phone, payment_status, created_at')
+        .select('id, first_name, last_name, email, phone, payment_status, created_at, matriculation_number')
         .eq('batch_id', batchId)
         .order('created_at', { ascending: true });
 
@@ -462,6 +463,7 @@ export default function AdminBatches() {
                             <TableHeader>
                               <TableRow>
                                 <TableHead className="w-12">#</TableHead>
+                                <TableHead>Student ID</TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Email</TableHead>
                                 <TableHead>Phone</TableHead>
@@ -473,6 +475,15 @@ export default function AdminBatches() {
                               {batch.students.map((student, index) => (
                                 <TableRow key={student.id}>
                                   <TableCell className="font-medium">{index + 1}</TableCell>
+                                  <TableCell>
+                                    {student.matriculation_number ? (
+                                      <span className="font-mono text-primary font-semibold">
+                                        {student.matriculation_number}
+                                      </span>
+                                    ) : (
+                                      <span className="text-muted-foreground text-sm">—</span>
+                                    )}
+                                  </TableCell>
                                   <TableCell>
                                     {student.first_name} {student.last_name}
                                   </TableCell>
