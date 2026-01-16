@@ -485,9 +485,24 @@ export default function StudentDashboard() {
                 </div>
                 <Button 
                   className="bg-primary hover:bg-primary/90"
-                  onClick={() => {
-                    // TODO: Integrate Paystack payment
-                    alert('Paystack payment integration coming soon!');
+                  onClick={async () => {
+                    if (!registration) return;
+                    try {
+                      const callbackUrl = `${window.location.origin}/student`;
+                      const { data, error } = await supabase.functions.invoke('paystack-initialize', {
+                        body: { 
+                          registration_id: registration.id,
+                          callback_url: callbackUrl
+                        }
+                      });
+                      if (error) throw error;
+                      if (data.authorization_url) {
+                        window.location.href = data.authorization_url;
+                      }
+                    } catch (err) {
+                      console.error('Payment error:', err);
+                      alert('Failed to start payment. Please try again.');
+                    }
                   }}
                 >
                   Pay Now
