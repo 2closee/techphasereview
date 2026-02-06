@@ -276,58 +276,64 @@ export default function StudentRegistration() {
   };
 
   const handleConfirmAndProceed = async () => {
+    if (submitting) return;
     setSubmitting(true);
 
-    // Calculate projected batch number for Warri registrations
-    const projectedBatchNumber = formData.preferred_location_id === WARRI_LOCATION_ID && batchInfo
-      ? batchInfo.batchNumber
-      : null;
+    try {
+      // Calculate projected batch number for Warri registrations
+      const projectedBatchNumber =
+        formData.preferred_location_id === WARRI_LOCATION_ID && batchInfo ? batchInfo.batchNumber : null;
 
-    const { data, error } = await supabase
-      .from('student_registrations')
-      .insert({
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        middle_name: formData.middle_name || null,
-        email: formData.email,
-        phone: formData.phone,
-        alternative_phone: formData.alternative_phone || null,
-        date_of_birth: formData.date_of_birth || null,
-        gender: formData.gender || null,
-        is_pwd: formData.is_pwd || null,
-        address: formData.address || null,
-        state: formData.state || null,
-        lga: formData.lga || null,
-        program_id: formData.program_id,
-        preferred_location_id: formData.preferred_location_id,
-        projected_batch_number: projectedBatchNumber,
-        education_level: formData.education_level || null,
-        current_income: formData.current_income || null,
-        previous_experience: formData.previous_experience || null,
-        can_attend_weekly: formData.can_attend_weekly || null,
-        guarantor_full_name: formData.guarantor_full_name || null,
-        guarantor_address: formData.guarantor_address || null,
-        guarantor_phone: formData.guarantor_phone || null,
-        guarantor_email: formData.guarantor_email || null,
-        terms_accepted: formData.terms_accepted || false,
-        payment_status: 'unpaid',
-        status: 'pending',
-      })
-      .select('id')
-      .single();
+      const { data, error } = await supabase
+        .from('student_registrations')
+        .insert({
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          middle_name: formData.middle_name || null,
+          email: formData.email,
+          phone: formData.phone,
+          alternative_phone: formData.alternative_phone || null,
+          date_of_birth: formData.date_of_birth || null,
+          gender: formData.gender || null,
+          is_pwd: formData.is_pwd || null,
+          address: formData.address || null,
+          state: formData.state || null,
+          lga: formData.lga || null,
+          program_id: formData.program_id,
+          preferred_location_id: formData.preferred_location_id,
+          projected_batch_number: projectedBatchNumber,
+          education_level: formData.education_level || null,
+          current_income: formData.current_income || null,
+          previous_experience: formData.previous_experience || null,
+          can_attend_weekly: formData.can_attend_weekly || null,
+          guarantor_full_name: formData.guarantor_full_name || null,
+          guarantor_address: formData.guarantor_address || null,
+          guarantor_phone: formData.guarantor_phone || null,
+          guarantor_email: formData.guarantor_email || null,
+          terms_accepted: formData.terms_accepted || false,
+          payment_status: 'unpaid',
+          status: 'pending',
+        })
+        .select('id')
+        .single();
 
-    setSubmitting(false);
+      if (error) {
+        // Surface the real error so we can debug quickly (RLS, duplicates, etc.)
+        console.error('Registration submission error:', error);
+        toast.error(`Failed to submit registration: ${error.message}`);
+        return;
+      }
 
-    if (error) {
-      toast.error('Failed to submit registration. Please try again.');
-      return;
-    }
-
-    if (data) {
-      setRegistrationId(data.id);
-      toast.success('Registration submitted! Create your account to continue.');
-      // Navigate to complete enrollment page
-      navigate(`/complete-enrollment?registration_id=${data.id}`);
+      if (data) {
+        setRegistrationId(data.id);
+        toast.success('Registration submitted! Create your account to continue.');
+        navigate(`/complete-enrollment?registration_id=${data.id}`);
+      }
+    } catch (err) {
+      console.error('Unexpected registration submission error:', err);
+      toast.error('Failed to submit registration due to an unexpected error.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
