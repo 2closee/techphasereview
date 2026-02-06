@@ -280,13 +280,17 @@ export default function StudentRegistration() {
     setSubmitting(true);
 
     try {
+      // Generate UUID client-side so we don't need SELECT permission after INSERT
+      const newRegistrationId = crypto.randomUUID();
+
       // Calculate projected batch number for Warri registrations
       const projectedBatchNumber =
         formData.preferred_location_id === WARRI_LOCATION_ID && batchInfo ? batchInfo.batchNumber : null;
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('student_registrations')
         .insert({
+          id: newRegistrationId,
           first_name: formData.first_name,
           last_name: formData.last_name,
           middle_name: formData.middle_name || null,
@@ -313,22 +317,17 @@ export default function StudentRegistration() {
           terms_accepted: formData.terms_accepted || false,
           payment_status: 'unpaid',
           status: 'pending',
-        })
-        .select('id')
-        .single();
+        });
 
       if (error) {
-        // Surface the real error so we can debug quickly (RLS, duplicates, etc.)
         console.error('Registration submission error:', error);
         toast.error(`Failed to submit registration: ${error.message}`);
         return;
       }
 
-      if (data) {
-        setRegistrationId(data.id);
-        toast.success('Registration submitted! Create your account to continue.');
-        navigate(`/complete-enrollment?registration_id=${data.id}`);
-      }
+      setRegistrationId(newRegistrationId);
+      toast.success('Registration submitted! Complete your payment to continue.');
+      navigate(`/complete-enrollment?registration_id=${newRegistrationId}`);
     } catch (err) {
       console.error('Unexpected registration submission error:', err);
       toast.error('Failed to submit registration due to an unexpected error.');
