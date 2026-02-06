@@ -57,45 +57,46 @@ export default function CompleteEnrollment() {
   }, [reference, registration, step]);
 
   const fetchRegistration = async () => {
-    const { data, error } = await supabase
-      .from('student_registrations')
-      .select(`
-        id,
-        first_name,
-        last_name,
-        email,
-        program_id,
-        payment_status,
-        account_created,
-        programs:program_id (
-          name,
-          tuition_fee,
-          registration_fee
-        )
-      `)
-      .eq('id', registrationId)
-      .single();
+    try {
+      // Use edge function to fetch registration (bypasses RLS securely)
+      const { data, error } = await supabase.functions.invoke('get-registration-public', {
+        body: { registration_id: registrationId }
+      });
 
-    if (error || !data) {
-      toast.error('Registration not found');
+      if (error) {
+        console.error('Edge function error:', error);
+        toast.error('Failed to load registration');
+        setStep('invalid');
+        return;
+      }
+
+      if (!data?.registration) {
+        toast.error('Registration not found');
+        setStep('invalid');
+        return;
+      }
+
+      const reg = data.registration;
+
+      // Check if account already created
+      if (reg.account_created) {
+        toast.info('Account already created. Please sign in.');
+        navigate('/auth');
+        return;
+      }
+
+      setRegistration(reg as RegistrationData);
+
+      // Determine which step to show
+      if (reg.payment_status === 'paid') {
+        setStep('create-account');
+      } else {
+        setStep('payment');
+      }
+    } catch (err) {
+      console.error('Fetch registration error:', err);
+      toast.error('Failed to load registration');
       setStep('invalid');
-      return;
-    }
-
-    // Check if account already created
-    if (data.account_created) {
-      toast.info('Account already created. Please sign in.');
-      navigate('/auth');
-      return;
-    }
-
-    setRegistration(data as RegistrationData);
-
-    // Determine which step to show
-    if (data.payment_status === 'paid') {
-      setStep('create-account');
-    } else {
-      setStep('payment');
     }
   };
 
