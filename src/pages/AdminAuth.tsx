@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { GraduationCap, Loader2, UserPlus, KeyRound } from 'lucide-react';
+import { Shield, Loader2 } from 'lucide-react';
 
-export default function Auth() {
+export default function AdminAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,19 +17,12 @@ export default function Auth() {
 
   useEffect(() => {
     if (!loading && user && role) {
-      // Redirect based on role
-      switch (role) {
-        case 'admin':
-          navigate('/admin');
-          break;
-        case 'teacher':
-          navigate('/teacher');
-          break;
-        case 'student':
-          navigate('/student');
-          break;
-        default:
-          navigate('/');
+      if (role === 'admin') {
+        navigate('/admin');
+      } else {
+        // Non-admin users trying to access admin portal
+        toast.error('Access denied. Admin privileges required.');
+        navigate('/');
       }
     }
   }, [user, role, loading, navigate]);
@@ -51,8 +44,6 @@ export default function Auth() {
       } else {
         toast.error(error.message);
       }
-    } else {
-      toast.success('Welcome back!');
     }
   };
 
@@ -69,33 +60,32 @@ export default function Auth() {
       <Card className="w-full max-w-md border-primary/20 shadow-elegant">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center">
-            <GraduationCap className="w-8 h-8 text-primary-foreground" />
+            <Shield className="w-8 h-8 text-primary-foreground" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-display text-foreground">Meranos Nigeria</CardTitle>
+            <CardTitle className="text-2xl font-display text-foreground">Admin Portal</CardTitle>
             <CardDescription className="text-muted-foreground">
-              TVET Training Portal
+              Meranos Nigeria - Staff Access Only
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Sign In Form */}
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="signin-email">Email</Label>
+              <Label htmlFor="admin-email">Email</Label>
               <Input
-                id="signin-email"
+                id="admin-email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="admin@meranos.ng"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="signin-password">Password</Label>
+              <Label htmlFor="admin-password">Password</Label>
               <Input
-                id="signin-password"
+                id="admin-password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
@@ -105,41 +95,14 @@ export default function Auth() {
             </div>
             <Button type="submit" className="w-full" variant="gold" disabled={isLoading}>
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Sign In
+              Sign In to Admin
             </Button>
-            
-            <div className="text-center">
-              <Link to="/forgot-password" className="text-sm text-primary hover:underline inline-flex items-center gap-1">
-                <KeyRound className="w-3 h-3" />
-                Forgot your password?
-              </Link>
-            </div>
           </form>
 
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                New applicant?
-              </span>
-            </div>
-          </div>
-
-          {/* Apply Button */}
-          <div className="text-center space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Want to enroll in our training programs?
-            </p>
-            <Link to="/register">
-              <Button variant="outline" className="w-full group">
-                <UserPlus className="w-4 h-4 mr-2" />
-                Apply for Enrollment
-              </Button>
-            </Link>
-          </div>
+          <p className="text-xs text-center text-muted-foreground">
+            This portal is for authorized staff only. Students should use the{' '}
+            <a href="/auth" className="text-primary hover:underline">student portal</a>.
+          </p>
         </CardContent>
       </Card>
     </div>

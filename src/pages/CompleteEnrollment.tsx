@@ -191,6 +191,14 @@ export default function CompleteEnrollment() {
 
       if (authError) throw authError;
 
+      // Check for fake success (user already exists - Supabase returns empty identities)
+      if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
+        setError('An account with this email already exists. Please sign in instead.');
+        toast.error('Account already exists. Please sign in.');
+        setTimeout(() => navigate('/auth'), 2000);
+        return;
+      }
+
       if (authData.user) {
         // Assign student role
         const { error: roleError } = await supabase
