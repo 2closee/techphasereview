@@ -5,36 +5,34 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-
-const contactInfo = [
-  {
-    icon: MapPin,
-    title: "Port Harcourt Center",
-    details: "274 Port Harcourt - Aba Expy, Port Harcourt, Rivers State",
-  },
-  {
-    icon: MapPin,
-    title: "Warri Center",
-    details: "71 Airport Road, Warri, Delta State",
-  },
-  {
-    icon: Phone,
-    title: "Call Us",
-    details: "+234 803 000 0001 | +234 803 000 0002",
-  },
-  {
-    icon: Mail,
-    title: "Email Us",
-    details: "info@meranos.ng",
-  },
-  {
-    icon: Clock,
-    title: "Office Hours",
-    details: "Mon - Fri: 8:00 AM - 5:00 PM",
-  },
-];
+import { useSettings } from "@/contexts/SettingsContext";
 
 const ContactSection = () => {
+  const { settings } = useSettings();
+
+  const contactInfo = [
+    {
+      icon: MapPin,
+      title: "Our Location",
+      details: settings.contact_address,
+    },
+    {
+      icon: Phone,
+      title: "Call Us",
+      details: settings.contact_phone,
+    },
+    {
+      icon: Mail,
+      title: "Email Us",
+      details: settings.contact_email,
+    },
+    {
+      icon: Clock,
+      title: "Office Hours",
+      details: "Mon - Fri: 8:00 AM - 5:00 PM",
+    },
+  ];
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -59,7 +57,7 @@ const ContactSection = () => {
             Have Questions? <span className="text-gradient-primary">Let's Talk</span>
           </h2>
           <p className="text-muted-foreground text-lg font-body">
-            Our admissions team is here to help. Reach out with any questions about our 
+            Our admissions team is here to help. Reach out with any questions about our
             programs, fees, or enrollment process.
           </p>
         </div>
@@ -68,8 +66,8 @@ const ContactSection = () => {
           {/* Contact Info */}
           <div className="space-y-4">
             {contactInfo.map((item, index) => (
-              <Card 
-                key={item.title + index} 
+              <Card
+                key={item.title + index}
                 className="border-border bg-card hover:shadow-soft transition-shadow animate-fade-up"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
@@ -95,54 +93,21 @@ const ContactSection = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-foreground font-body mb-2 block">
-                      Full Name
-                    </label>
-                    <Input
-                      placeholder="John Doe"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                      className="bg-background"
-                    />
+                    <label className="text-sm font-medium text-foreground font-body mb-2 block">Full Name</label>
+                    <Input placeholder="John Doe" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required className="bg-background" />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-foreground font-body mb-2 block">
-                      Email Address
-                    </label>
-                    <Input
-                      type="email"
-                      placeholder="john@example.com"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                      className="bg-background"
-                    />
+                    <label className="text-sm font-medium text-foreground font-body mb-2 block">Email Address</label>
+                    <Input type="email" placeholder="john@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required className="bg-background" />
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-foreground font-body mb-2 block">
-                    Phone Number
-                  </label>
-                  <Input
-                    placeholder="+234 (0) 123 456 7890"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="bg-background"
-                  />
+                  <label className="text-sm font-medium text-foreground font-body mb-2 block">Phone Number</label>
+                  <Input placeholder="+234 (0) 123 456 7890" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="bg-background" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-foreground font-body mb-2 block">
-                    Message
-                  </label>
-                  <Textarea
-                    placeholder="Tell us about your interests and how we can help..."
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    required
-                    rows={4}
-                    className="bg-background resize-none"
-                  />
+                  <label className="text-sm font-medium text-foreground font-body mb-2 block">Message</label>
+                  <Textarea placeholder="Tell us about your interests and how we can help..." value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} required rows={4} className="bg-background resize-none" />
                 </div>
                 <Button size="lg" className="w-full group bg-gradient-primary hover:opacity-90">
                   Send Message
