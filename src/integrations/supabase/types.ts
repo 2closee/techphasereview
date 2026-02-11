@@ -65,6 +65,87 @@ export type Database = {
           },
         ]
       }
+      certification_courses: {
+        Row: {
+          certification_id: string
+          id: string
+          program_id: string
+        }
+        Insert: {
+          certification_id: string
+          id?: string
+          program_id: string
+        }
+        Update: {
+          certification_id?: string
+          id?: string
+          program_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certification_courses_certification_id_fkey"
+            columns: ["certification_id"]
+            isOneToOne: false
+            referencedRelation: "certifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certification_courses_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      certifications: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          provider: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          provider?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          provider?: string | null
+        }
+        Relationships: []
+      }
+      cleanup_logs: {
+        Row: {
+          details: Json | null
+          id: string
+          ran_at: string
+          records_deleted: number
+        }
+        Insert: {
+          details?: Json | null
+          id?: string
+          ran_at?: string
+          records_deleted?: number
+        }
+        Update: {
+          details?: Json | null
+          id?: string
+          ran_at?: string
+          records_deleted?: number
+        }
+        Relationships: []
+      }
       completion_feedback_notifications: {
         Row: {
           id: string
@@ -1007,6 +1088,36 @@ export type Database = {
         }
         Relationships: []
       }
+      password_reset_tokens: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          token: string
+          used: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          token: string
+          used?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -1104,28 +1215,73 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
           created_at: string | null
           email: string | null
           full_name: string | null
           id: string
+          is_suspended: boolean
           phone: string | null
+          specialization: string | null
+          suspended_at: string | null
+          suspended_by: string | null
           updated_at: string | null
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
           id: string
+          is_suspended?: boolean
           phone?: string | null
+          specialization?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
           updated_at?: string | null
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          is_suspended?: boolean
           phone?: string | null
+          specialization?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      program_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
         }
         Relationships: []
       }
@@ -1972,15 +2128,15 @@ export type Database = {
       settings: {
         Row: {
           key: string
-          value: string
+          value: Json
         }
         Insert: {
           key?: string
-          value?: string
+          value?: Json
         }
         Update: {
           key?: string
-          value?: string
+          value?: Json
         }
         Relationships: []
       }
@@ -2600,6 +2756,11 @@ export type Database = {
         Args: { _center_id: number; _user_id: string }
         Returns: boolean
       }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      toggle_user_suspension: {
+        Args: { suspend: boolean; target_user_id: string }
+        Returns: undefined
+      }
       update_repair_center_branding: {
         Args: { _center_id: number; _cover_url?: string; _logo_url?: string }
         Returns: undefined
@@ -2610,7 +2771,14 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user" | "teacher" | "student"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "teacher"
+        | "student"
+        | "super_admin"
+        | "accountant"
       dispute_status: "open" | "under_review" | "resolved" | "rejected"
       job_status:
         | "requested"
@@ -2766,7 +2934,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user", "teacher", "student"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "teacher",
+        "student",
+        "super_admin",
+        "accountant",
+      ],
       dispute_status: ["open", "under_review", "resolved", "rejected"],
       job_status: [
         "requested",

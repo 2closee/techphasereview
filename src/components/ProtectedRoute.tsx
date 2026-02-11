@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 
-type AppRole = 'admin' | 'teacher' | 'student';
+type AppRole = 'admin' | 'super_admin' | 'accountant' | 'teacher' | 'student';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -25,11 +25,18 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/auth" replace />;
   }
 
-  if (allowedRoles && role && !allowedRoles.includes(role as AppRole)) {
-    // Redirect to appropriate dashboard based on role
+  // super_admin inherits admin and accountant permissions
+  const effectiveRoles: AppRole[] = role === 'super_admin'
+    ? ['super_admin', 'admin', 'accountant']
+    : role ? [role as AppRole] : [];
+
+  if (allowedRoles && effectiveRoles.length > 0 && !allowedRoles.some(r => effectiveRoles.includes(r))) {
     switch (role) {
       case 'admin':
+      case 'super_admin':
         return <Navigate to="/admin" replace />;
+      case 'accountant':
+        return <Navigate to="/accountant" replace />;
       case 'teacher':
         return <Navigate to="/teacher" replace />;
       case 'student':
