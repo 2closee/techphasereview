@@ -65,6 +65,13 @@ const studentNavItems: NavItem[] = [
   { title: 'Profile', href: '/student/profile', icon: UserCircle },
 ];
 
+const accountantNavItems: NavItem[] = [
+  { title: 'Dashboard', href: '/accountant', icon: LayoutDashboard },
+  { title: 'Registrations', href: '/accountant/registrations', icon: Users },
+  { title: 'Payments', href: '/accountant/payments', icon: CreditCard },
+  { title: 'Reports', href: '/accountant/reports', icon: BarChart3 },
+];
+
 interface DashboardSidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -74,10 +81,13 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
   const { role, signOut, user } = useAuth();
   const location = useLocation();
 
-  const navItems = role === 'admin' 
-    ? adminNavItems 
-    : role === 'teacher' 
-    ? teacherNavItems 
+  // super_admin sees admin nav items
+  const navItems = (role === 'admin' || role === 'super_admin')
+    ? adminNavItems
+    : role === 'accountant'
+    ? accountantNavItems
+    : role === 'teacher'
+    ? teacherNavItems
     : studentNavItems;
 
   const handleSignOut = async () => {

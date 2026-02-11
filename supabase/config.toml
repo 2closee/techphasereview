@@ -11,3 +11,12 @@ verify_jwt = false
 
 [functions.get-registration-public]
 verify_jwt = false
+
+[functions.create-staff]
+verify_jwt = false
+
+[functions.bootstrap-admin]
+verify_jwt = false
+
+[functions.cleanup-expired-registrations]
+verify_jwt = false

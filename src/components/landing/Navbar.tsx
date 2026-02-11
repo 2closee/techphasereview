@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Monitor, MapPin } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { settings } = useSettings();
 
   const navLinks = [
     { name: "Programs", href: "#programs" },
@@ -24,7 +26,7 @@ const Navbar = () => {
               <Monitor className="w-6 h-6 text-primary-foreground" />
             </div>
             <div className="flex flex-col">
-              <span className="font-display text-xl font-bold text-foreground">Meranos</span>
+              <span className="font-display text-xl font-bold text-foreground">{String(settings.academy_name).split(' ')[0] || 'Meranos'}</span>
               <span className="text-xs text-muted-foreground font-body tracking-wider">NIGERIA LIMITED</span>
             </div>
           </Link>
