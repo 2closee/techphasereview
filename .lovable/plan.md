@@ -1,268 +1,166 @@
 
 
-# Full Feature Implementation Plan -- Meranos ICT Training Platform
+# Migration Plan: Move LMS to a New Supabase Project
 
-This is a phased implementation plan covering all missing features from the blueprint, organized in dependency order so each phase builds on the previous one.
+## Overview
 
----
+You will create a brand-new Supabase project. I will then generate a single SQL script you run in that new project to recreate every LMS table, function, trigger, RLS policy, and storage bucket. Then we reconnect this Lovable project to the new database and redeploy edge functions.
 
-## Phase 1: Database Foundation (Roles, Missing Tables, Triggers)
-
-**Why first:** Everything else depends on the correct role system and schema.
-
-### 1A. Extend the `app_role` enum
-- Add `super_admin` and `accountant` to the existing enum (currently: `admin`, `moderator`, `user`, `teacher`, `student`)
-- Remove unused legacy roles (`moderator`, `user`) if safe
-
-### 1B. Add missing columns to `profiles`
-- `avatar_url` (text) -- for profile photos
-- `bio` (text)
-- `specialization` (text)
-- `is_suspended` (boolean, default false)
-- `suspended_at` (timestamptz)
-- `suspended_by` (uuid)
-
-### 1C. Create missing tables
-
-| Table | Purpose |
-|-------|---------|
-| `program_categories` | Dynamic taxonomy (id, name, slug, description, is_active, created_at) |
-| `certifications` | Industry cert directory (id, name, provider, description, is_active, created_at) |
-| `certification_courses` | Links certifications to programs (id, certification_id, program_id) |
-| `cleanup_logs` | Audit trail for expired registration cleanup (id, records_deleted, ran_at, details) |
-| `password_reset_tokens` | Secure custom password reset (id, user_id, token, email, expires_at, used, created_at) |
-
-### 1D. Add `settings` table data structure
-- The `settings` table exists but is empty and has only `key` (text) and `value` (text) columns
-- Alter `value` column to `jsonb` type for structured config storage
-- Seed initial settings rows: `academy_name`, `hero_title`, `hero_subtitle`, `hero_badge_text`, `contact_email`, `contact_phone`, `contact_address`, `enrollment_open`, `geofence_radius_meters`, `theme_primary_color`
-
-### 1E. Create database functions and triggers
-
-| Function/Trigger | Purpose |
-|-----------------|---------|
-| `assign_student_role()` trigger | Auto-grants `student` role when `user_id` is set on `student_registrations` |
-| `toggle_user_suspension(target_user_id, suspend boolean)` | SECURITY DEFINER function; only callable by super_admin |
-| `is_super_admin(user_id)` | Helper that checks for `super_admin` role (inherits admin + accountant access) |
-
-### 1F. RLS policies for new tables
-- `password_reset_tokens`: No public access (edge functions use service role)
-- `program_categories`: Public SELECT, admin-only INSERT/UPDATE/DELETE
-- `certifications` / `certification_courses`: Same pattern
-- `cleanup_logs`: Admin-only SELECT, system INSERT
-- Update existing policies to allow `super_admin` access everywhere `admin` is allowed
-
-### 1G. Storage buckets
-- Create `program-images` bucket (public) for program banners
-- Create `passport-photos` bucket (public) for student ID photos
+**FixBudi stays completely untouched** -- we never modify, delete, or run anything on the old database.
 
 ---
 
-## Phase 2: Edge Functions (5 new + 2 updated)
+## Step 1: You Create a New Supabase Project (manual)
 
-### 2A. `send-password-reset`
-- Accepts `{ email }`
-- Looks up user via service role
-- Generates secure token, stores in `password_reset_tokens` (1hr expiry)
-- Sends email via Resend API
-- Returns generic success (no email enumeration)
+1. Go to [supabase.com/dashboard](https://supabase.com/dashboard)
+2. Click "New Project"
+3. Choose a name like `meranos-lms`
+4. Pick a region close to your users (e.g. EU West or US East)
+5. Set a database password (save it)
+6. Once created, copy these 3 values from **Settings > API**:
+   - Project URL (e.g. `https://xxxxx.supabase.co`)
+   - Anon/public key
+   - Service role key (for edge functions)
 
-### 2B. `verify-reset-token`
-- Accepts `{ token, new_password }`
-- Validates token (exists, not expired, not used)
-- Updates password via Supabase Admin API
-- Marks token as used
-
-### 2C. `create-staff`
-- Accepts `{ email, password, full_name, role }` (admin/teacher/accountant)
-- Uses Supabase Admin API (`createUser` with `email_confirm: true`)
-- Creates profile entry
-- Assigns role in `user_roles`
-- Replaces current insecure client-side `signUp` in AdminStaff.tsx
-
-### 2D. `bootstrap-admin`
-- One-time setup function to create the initial `super_admin` account
-- Checks if any super_admin exists; if not, creates one
-- Protected by a setup secret
-
-### 2E. `send-auth-email`
-- Branded email via Resend for: signup confirmation, enrollment invitation, password reset
-- Uses HTML templates with academy branding from `settings` table
-
-### 2F. `cleanup-expired-registrations`
-- Deletes unpaid registrations older than a configurable deadline
-- Logs results to `cleanup_logs` table
-- Designed to be called via cron or manual trigger
-
-### 2G. `faq-chat` (AI Chatbot)
-- Accepts user question, returns streaming SSE response
-- Uses OpenAI API (secret already configured)
-- System prompt includes academy FAQ content from settings
-
-### 2H. Update `supabase/config.toml`
-- Add all new functions with `verify_jwt = false`
+Come back here and share the **Project URL** and **Anon key**. I will handle the rest.
 
 ---
 
-## Phase 3: Auth & Role System Updates (Frontend)
+## Step 2: I Generate the Full Migration SQL
 
-### 3A. Update `useAuth` hook
-- Extend `AppRole` type to include `super_admin` and `accountant`
-- `super_admin` should be treated as having both `admin` and `accountant` permissions
+A single SQL script you paste into the new project's **SQL Editor** containing:
 
-### 3B. Update `ProtectedRoute`
-- Add `accountant` and `super_admin` to allowed roles
-- `super_admin` passes any role check that includes `admin` or `accountant`
+### 2A. Enum and shared infrastructure
+- `app_role` enum with exactly: `admin`, `super_admin`, `accountant`, `teacher`, `student`
+- No FixBudi-specific enums (`job_status`, `payment_type`, `dispute_status`, etc.)
 
-### 3C. Update `AdminStaff.tsx`
-- Replace client-side `signUp` with call to `create-staff` edge function
-- Add `accountant` and `super_admin` to role selection dropdown
-- Add suspension toggle button (calls `toggle_user_suspension` RPC)
+### 2B. Core tables (4)
+- `profiles` (with all LMS columns: avatar_url, bio, specialization, is_suspended, etc.)
+- `user_roles` (user_id + app_role, unique constraint)
+- `settings` (key text PK, value jsonb) with seeded defaults
+- `notifications` (user_id, title, message, type, is_read, etc.)
 
-### 3D. Update `AdminAuth.tsx`
-- Add sign-up capability for staff (admin creates accounts, or use invite flow)
-- Ensure it routes `super_admin` to admin dashboard, `accountant` to accountant dashboard
+### 2C. LMS-specific tables (12+)
 
-### 3E. Update `ForgotPassword.tsx` and `ResetPassword.tsx`
-- Use the new `send-password-reset` and `verify-reset-token` edge functions
+| Table | Key columns |
+|-------|-------------|
+| `programs` | name, description, duration, fee, category_id, image_url, program_code |
+| `program_categories` | name, slug, description, is_active |
+| `certifications` | name, provider, description, is_active |
+| `certification_courses` | certification_id, program_id |
+| `training_locations` | name, address, latitude, longitude, geofence_radius, location_code |
+| `location_programs` | location_id, program_id, is_active |
+| `student_registrations` | full enrollment record with payment_status, matriculation_number, batch_id, user_id |
+| `enrollment_payments` | registration_id, amount, status, payment_reference |
+| `course_batches` | program_id, location_id, batch_number, current_count, max_students, status |
+| `attendance` | student_id, program_id, date, status, marked_by |
+| `geolocation_checkins` | student_id, session_id, latitude, longitude, is_within_geofence |
+| `course_progress` | student_id, program_id, completion_percentage, status |
+| `cleanup_logs` | records_deleted, ran_at, details |
+| `password_reset_tokens` | user_id, token, email, expires_at, used |
 
----
+### 2D. Database functions (6)
 
-## Phase 4: Settings System & SettingsProvider
+| Function | Purpose |
+|----------|---------|
+| `handle_new_user()` | Trigger on auth.users to auto-create profile |
+| `has_role()` | RLS helper |
+| `is_super_admin()` | RLS helper |
+| `get_user_role()` | Returns user's role |
+| `assign_student_role()` | Trigger: auto-grants student role on registration link |
+| `assign_student_to_batch()` | Trigger: auto-assigns batch + matriculation number on payment |
+| `generate_matriculation_number()` | Generates formatted ID |
+| `toggle_user_suspension()` | Super-admin only suspension |
+| `update_updated_at_column()` | Generic timestamp trigger |
 
-### 4A. Create `src/contexts/SettingsContext.tsx`
-- `SettingsProvider` component wrapping the app
-- Fetches all settings from `settings` table on mount
-- Subscribes to Supabase Realtime for live updates
-- Exposes `useSettings()` hook returning typed settings object
+### 2E. Triggers
+- `handle_new_user` on `auth.users`
+- `trg_assign_student_role` on `student_registrations`
+- `trg_assign_student_to_batch` on `student_registrations`
+- `update_updated_at` on `profiles`, `course_batches`, etc.
 
-### 4B. Create Admin Settings Page (`src/pages/admin/AdminSettings.tsx`)
-- Tabbed interface with sections:
-  - **Academy Branding**: name, logo, description
-  - **Hero Banner**: title, subtitle, badge text, stats
-  - **Enrollment**: open/closed toggle, deadlines
-  - **Attendance**: geofence radius, check-in rules
-  - **Program Categories**: CRUD list (from `program_categories` table)
-  - **Certifications**: CRUD directory (from `certifications` table)
-  - **Appearance/Theme**: primary color picker
+### 2F. RLS policies
+- Every table gets `ENABLE ROW LEVEL SECURITY`
+- All existing LMS policies recreated exactly
+- No FixBudi policies included
 
-### 4C. Update Landing Page to use Settings
-- `HeroSection.tsx`: Pull title, subtitle, badge text, stats from `useSettings()`
-- `ContactSection.tsx`: Pull address, phone, email from `useSettings()`
-- `Navbar.tsx`: Pull academy name from `useSettings()`
+### 2G. Storage buckets
+- `program-images` (public) with admin upload policies
+- `passport-photos` (public) with student-scoped upload policies
 
----
-
-## Phase 5: Missing Dashboard Pages
-
-### 5A. Admin Pages (3 new)
-
-| Page | File | Features |
-|------|------|----------|
-| Reports | `src/pages/admin/AdminReports.tsx` | Recharts: enrollment trends, revenue by program, attendance rates, payment status breakdown |
-| Payments | `src/pages/admin/AdminPayments.tsx` | List all `enrollment_payments` + `student_payments`, filter by status/program, export |
-| Settings | `src/pages/admin/AdminSettings.tsx` | (Covered in Phase 4) |
-
-### 5B. Teacher Pages (4 new)
-
-| Page | File | Features |
-|------|------|----------|
-| My Classes | `src/pages/teacher/TeacherClasses.tsx` | Sessions assigned to this teacher, grouped by program |
-| Students | `src/pages/teacher/TeacherStudents.tsx` | Student roster for assigned classes |
-| Timetable | `src/pages/teacher/TeacherTimetable.tsx` | Weekly calendar view of scheduled sessions |
-| Grades | `src/pages/teacher/TeacherGrades.tsx` | Grade entry/view for assigned students |
-| Profile | `src/pages/teacher/TeacherProfile.tsx` | Edit own profile (name, bio, specialization, avatar) |
-
-### 5C. Student Pages (4 new)
-
-| Page | File | Features |
-|------|------|----------|
-| My Courses | `src/pages/student/StudentCourses.tsx` | Curriculum view, progress tracker |
-| Grades | `src/pages/student/StudentGrades.tsx` | View grades/assessments |
-| Payments | `src/pages/student/StudentPayments.tsx` | Payment history, balance due, receipt download |
-| Profile | `src/pages/student/StudentProfile.tsx` | Edit profile, upload passport photo to `passport-photos` bucket |
-
-### 5D. Accountant Dashboard (4 new pages)
-
-| Page | File | Features |
-|------|------|----------|
-| Dashboard | `src/pages/accountant/AccountantDashboard.tsx` | Financial overview: total collected, pending, by program |
-| Registrations | `src/pages/accountant/AccountantRegistrations.tsx` | View/manage student registrations |
-| Payments | `src/pages/accountant/AccountantPayments.tsx` | Track all payments, mark office payments |
-| Reports | `src/pages/accountant/AccountantReports.tsx` | Financial analytics with Recharts |
+### 2H. Settings seed data
+- Academy name, hero text, contact info, enrollment status, geofence radius, theme color
 
 ---
 
-## Phase 6: Routing & Sidebar Updates
+## Step 3: I Update the Lovable Project
 
-### 6A. Update `App.tsx`
-- Add routes for all new pages from Phase 5
-- Add `/accountant/*` routes with `ProtectedRoute allowedRoles={['accountant', 'super_admin']}`
-- Add `/admin/settings` and `/admin/payments` and `/admin/reports` routes
+### 3A. Update environment and client
+- Update `.env` with new `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`
+- Update `src/integrations/supabase/client.ts` with new credentials
 
-### 6B. Update `DashboardSidebar.tsx`
-- Add `accountantNavItems` array
-- Add `super_admin` logic (show admin nav items)
-- Remove stub links that point to non-existent pages (Payments, Reports, Settings for admin are now real)
+### 3B. Clean up `types.ts`
+- Remove all FixBudi table types: `Repair Center`, `repair_jobs`, `repair_center_staff`, `repair_center_reviews`, `repair_warranties`, `conversations`, `messages`, `diagnostic_conversations`, `diagnostic_messages`, `diagnostic_reports`, `delivery_requests`, `delivery_commissions`, `delivery_status_history`, `completion_feedback_notifications`, `logistics_provider_settings`, `payout_settings`, `payments`, `email_notifications`, `email_logs`, `disputes`, `support_tickets`
+- Remove FixBudi enums: `job_status`, `payment_status`, `payment_type`, `dispute_status`, `ticket_priority`, `ticket_status`, `warranty_type`
+- Keep only LMS tables and the `app_role` enum
 
-### 6C. Update `DashboardLayout.tsx`
-- Replace the static Bell button with `<NotificationPopover />` component (already built but not wired in)
+### 3C. Update `supabase/config.toml`
+- Update `project_id` to the new project
+- Keep all existing function configs
 
----
+### 3D. Add secrets to the new project
+The following secrets need to be added to the **new** Supabase project:
+- `PAYSTACK_SECRET_KEY`
+- `OPENAI_API_KEY`
+- `RESEND_API_KEY`
+- `BOOTSTRAP_ADMIN_SECRET`
 
-## Phase 7: PWA & AI Chatbot (Polish Features)
-
-### 7A. PWA Support
-- Create `public/manifest.json` with app name, icons, theme color
-- Create `public/service-worker.js` for offline caching
-- Register service worker in `index.html`
-- Create `src/components/PWAInstallBanner.tsx` -- dismissible banner prompting install
-
-### 7B. AI FAQ Chatbot Widget
-- Create `src/components/landing/ChatbotWidget.tsx`
-  - Floating button in bottom-right corner
-  - Opens chat panel with message history
-  - Sends messages to `faq-chat` edge function
-  - Displays streaming responses via SSE
-- Add to `Index.tsx` landing page
+### 3E. Redeploy all edge functions
+- `bootstrap-admin`
+- `create-staff`
+- `cleanup-expired-registrations`
+- `get-registration-public`
+- `paystack-initialize`
+- `paystack-verify`
+- `paystack-webhook`
 
 ---
 
-## Phase 8: Program Image Upload & Optimization
+## Step 4: Verify Everything Works
 
-### 8A. Update `AdminPrograms.tsx`
-- Add image upload field using `program-images` storage bucket
-- Add focal point picker (click on image to set focal coordinates)
-- Store `image_url` and focal point in `programs` table
-
-### 8B. Create `src/components/OptimizedImage.tsx`
-- Component with blur placeholder loading
-- Focal point-based positioning
-- Responsive srcset support
+- Landing page loads with settings from new DB
+- Admin login works
+- Student registration flow works
+- Edge functions respond correctly
 
 ---
 
-## Implementation Priority Summary
+## What You Do vs. What I Do
 
-| Phase | Effort | Dependencies |
-|-------|--------|-------------|
-| Phase 1: Database | High | None -- do first |
-| Phase 2: Edge Functions | High | Phase 1 (tables, roles) |
-| Phase 3: Auth Updates | Medium | Phase 1 (roles enum) |
-| Phase 4: Settings System | Medium | Phase 1 (settings table) |
-| Phase 5: Dashboard Pages | High | Phases 1-3 (roles, auth, data) |
-| Phase 6: Routing & Sidebar | Low | Phase 5 (pages exist) |
-| Phase 7: PWA & Chatbot | Medium | Phase 2 (faq-chat function) |
-| Phase 8: Image Upload | Low | Phase 1 (storage bucket) |
+| Task | Who |
+|------|-----|
+| Create new Supabase project | You |
+| Share new URL + anon key | You |
+| Generate full migration SQL | Me |
+| Run migration SQL in new project SQL Editor | You |
+| Update Lovable project code + env | Me |
+| Add secrets to new project | You (via Supabase dashboard or Lovable secrets tool) |
+| Deploy edge functions | Me |
+| Clean up types.ts | Me |
+| Test end-to-end | Both |
 
 ---
 
-## Recommendation
+## Important Notes
 
-Due to the scope, I recommend implementing this in batches across multiple conversations:
-1. **First batch**: Phases 1 + 2 + 3 (foundation)
-2. **Second batch**: Phases 4 + 5 + 6 (dashboards)
-3. **Third batch**: Phases 7 + 8 (polish)
+- **FixBudi is never touched.** No drops, no modifications, no migrations run on the old DB.
+- **User accounts don't transfer.** You'll use `bootstrap-admin` to create the first super_admin on the new project, then `create-staff` for other staff.
+- **No student data to migrate** (unless you have real students already enrolled -- let me know).
+- The old Supabase project continues running FixBudi independently.
 
-Each batch can be approved and implemented independently while maintaining a working application at every step.
+---
+
+## Next Step
+
+Create your new Supabase project and share the **Project URL** and **Anon key** with me. I'll then generate the complete migration SQL and update all the code.
 
