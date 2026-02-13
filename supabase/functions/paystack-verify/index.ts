@@ -59,8 +59,8 @@ serve(async (req) => {
     const isSuccessful = paymentData.status === 'success';
 
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get('LMS_SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('LMS_SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get registration_id from payment record or metadata

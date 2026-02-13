@@ -22,10 +22,12 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Missing required fields: email, password, full_name" }), { status: 400, headers: corsHeaders });
     }
 
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const lmsUrl = Deno.env.get("LMS_SUPABASE_URL");
+    const lmsServiceKey = Deno.env.get("LMS_SUPABASE_SERVICE_ROLE_KEY");
+    if (!lmsUrl || !lmsServiceKey) {
+      return new Response(JSON.stringify({ error: "LMS Supabase credentials not configured" }), { status: 500, headers: corsHeaders });
+    }
+    const adminClient = createClient(lmsUrl, lmsServiceKey);
 
     // Check if any super_admin already exists
     const { data: existingAdmins } = await adminClient
