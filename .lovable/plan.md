@@ -1,34 +1,21 @@
 
 
-# Update Project Configuration to New Supabase Project
+# Reset Bootstrap Secret and Create Super Admin
 
-## Overview
-Update all configuration files to point to the new Supabase project `ijmxxysgzkfedumfpyso` with the provided anon key, then redeploy all edge functions.
+## Steps
 
-## Changes
+### 1. Reset the `BOOTSTRAP_ADMIN_SECRET`
+Set the secret value to `SuperAdmin2026!` on the Supabase project.
 
-### 1. Update `.env`
-- `VITE_SUPABASE_PROJECT_ID`: `esbqtuljvejvrzawsqgk` -> `ijmxxysgzkfedumfpyso`
-- `VITE_SUPABASE_URL`: `https://esbqtuljvejvrzawsqgk.supabase.co` -> `https://ijmxxysgzkfedumfpyso.supabase.co`
-- `VITE_SUPABASE_PUBLISHABLE_KEY`: update to the new anon key
+### 2. Fix `.env` Configuration
+The `.env` file has reverted back to the old project ID (`esbqtuljvejvrzawsqgk`). It needs to be updated back to the new project (`ijmxxysgzkfedumfpyso`) with the correct anon key.
 
-### 2. Update `src/integrations/supabase/client.ts`
-- `SUPABASE_URL`: update to `https://ijmxxysgzkfedumfpyso.supabase.co`
-- `SUPABASE_PUBLISHABLE_KEY`: update to the new anon key
+### 3. Call the `bootstrap-admin` Edge Function
+Send a POST request to the deployed `bootstrap-admin` function with:
+- **email**: Ibinaboloveday@gmail.com
+- **password**: Track1989+
+- **full_name**: Ibinabo Loveday
+- **setup_secret**: SuperAdmin2026!
 
-### 3. Update `supabase/config.toml`
-- `project_id`: `esbqtuljvejvrzawsqgk` -> `ijmxxysgzkfedumfpyso`
-
-### 4. Redeploy All Edge Functions
-Redeploy all 7 edge functions to the new project:
-- bootstrap-admin
-- cleanup-expired-registrations
-- create-staff
-- get-registration-public
-- paystack-initialize
-- paystack-verify
-- paystack-webhook
-
-## Important Note
-After deployment, you will need to set the required secrets (PAYSTACK_SECRET_KEY, BOOTSTRAP_ADMIN_SECRET, etc.) on the **new** Supabase project since secrets are project-specific and do not carry over.
+This will create the first super_admin account in the new Supabase project.
 
