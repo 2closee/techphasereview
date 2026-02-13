@@ -1,47 +1,34 @@
 
 
-# Fix: Remove Redundant DROP TRIGGER Statements
+# Update Project Configuration to New Supabase Project
 
-## Problem
-
-The `DROP TRIGGER IF EXISTS ... ON public.student_registrations` statements at the top of the script fail on a fresh database because PostgreSQL requires the referenced table to exist -- `IF EXISTS` only checks for the trigger, not the table.
-
-## Solution
-
-Remove all `DROP TRIGGER IF EXISTS` statements (lines 10-22). They are completely redundant because:
-
-- `DROP TABLE IF EXISTS ... CASCADE` (lines 24-45) already removes any triggers on those tables
-- `DROP FUNCTION IF EXISTS ... CASCADE` (lines 47-55) already removes triggers that use those functions
+## Overview
+Update all configuration files to point to the new Supabase project `ijmxxysgzkfedumfpyso` with the provided anon key, then redeploy all edge functions.
 
 ## Changes
 
-**File:** `NEW_PROJECT_MIGRATION.sql`
+### 1. Update `.env`
+- `VITE_SUPABASE_PROJECT_ID`: `esbqtuljvejvrzawsqgk` -> `ijmxxysgzkfedumfpyso`
+- `VITE_SUPABASE_URL`: `https://esbqtuljvejvrzawsqgk.supabase.co` -> `https://ijmxxysgzkfedumfpyso.supabase.co`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`: update to the new anon key
 
-Remove lines 10-22 (all 13 DROP TRIGGER statements):
-```sql
--- REMOVE THESE LINES:
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP TRIGGER IF EXISTS trg_assign_student_role ON public.student_registrations;
-DROP TRIGGER IF EXISTS trigger_assign_student_to_batch ON public.student_registrations;
-DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
-DROP TRIGGER IF EXISTS update_programs_updated_at ON public.programs;
-DROP TRIGGER IF EXISTS update_teachers_updated_at ON public.teachers;
-DROP TRIGGER IF EXISTS update_course_batches_updated_at ON public.course_batches;
-DROP TRIGGER IF EXISTS update_student_registrations_updated_at ON public.student_registrations;
-DROP TRIGGER IF EXISTS update_student_payments_updated_at ON public.student_payments;
-DROP TRIGGER IF EXISTS update_training_sessions_updated_at ON public.training_sessions;
-DROP TRIGGER IF EXISTS update_training_locations_updated_at ON public.training_locations;
-DROP TRIGGER IF EXISTS update_course_progress_updated_at ON public.course_progress;
-DROP TRIGGER IF EXISTS update_attendance_updated_at ON public.attendance;
-```
+### 2. Update `src/integrations/supabase/client.ts`
+- `SUPABASE_URL`: update to `https://ijmxxysgzkfedumfpyso.supabase.co`
+- `SUPABASE_PUBLISHABLE_KEY`: update to the new anon key
 
-The `auth.users` trigger is a special case -- we handle it by wrapping in a safe block:
-```sql
-DO $$ BEGIN
-  DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-EXCEPTION WHEN undefined_table THEN NULL;
-END $$;
-```
+### 3. Update `supabase/config.toml`
+- `project_id`: `esbqtuljvejvrzawsqgk` -> `ijmxxysgzkfedumfpyso`
 
-No other changes needed. The rest of the script ordering is correct.
+### 4. Redeploy All Edge Functions
+Redeploy all 7 edge functions to the new project:
+- bootstrap-admin
+- cleanup-expired-registrations
+- create-staff
+- get-registration-public
+- paystack-initialize
+- paystack-verify
+- paystack-webhook
+
+## Important Note
+After deployment, you will need to set the required secrets (PAYSTACK_SECRET_KEY, BOOTSTRAP_ADMIN_SECRET, etc.) on the **new** Supabase project since secrets are project-specific and do not carry over.
 
