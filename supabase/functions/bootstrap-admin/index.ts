@@ -13,7 +13,6 @@ Deno.serve(async (req) => {
   try {
     const { email, password, full_name, setup_secret } = await req.json();
 
-    // Verify setup secret to prevent unauthorized bootstrap
     const expectedSecret = Deno.env.get("BOOTSTRAP_ADMIN_SECRET");
     if (!expectedSecret || setup_secret !== expectedSecret) {
       return new Response(JSON.stringify({ error: "Invalid setup secret" }), { status: 403, headers: corsHeaders });
@@ -39,7 +38,8 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "A super_admin already exists. Bootstrap is disabled." }), { status: 409, headers: corsHeaders });
     }
 
-    // Create the super_admin user
+    // Try to create the user, or find existing one
+    let userId: string;
     const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
       email,
       password,
@@ -48,24 +48,39 @@ Deno.serve(async (req) => {
     });
 
     if (createErr) {
-      return new Response(JSON.stringify({ error: createErr.message }), { status: 400, headers: corsHeaders });
+      // If user already exists, look them up
+      if (createErr.message.includes("already been registered")) {
+        const { data: { users }, error: listErr } = await adminClient.auth.admin.listUsers();
+        if (listErr) {
+          return new Response(JSON.stringify({ error: listErr.message }), { status: 500, headers: corsHeaders });
+        }
+        const existingUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+        if (!existingUser) {
+          return new Response(JSON.stringify({ error: "User exists but could not be found" }), { status: 404, headers: corsHeaders });
+        }
+        userId = existingUser.id;
+      } else {
+        return new Response(JSON.stringify({ error: createErr.message }), { status: 400, headers: corsHeaders });
+      }
+    } else {
+      userId = newUser.user.id;
     }
 
-    // Create profile
+    // Upsert profile
     await adminClient.from("profiles").upsert({
-      id: newUser.user.id,
+      id: userId,
       email,
       full_name,
     });
 
     // Assign super_admin role
-    await adminClient.from("user_roles").insert({
-      user_id: newUser.user.id,
+    await adminClient.from("user_roles").upsert({
+      user_id: userId,
       role: "super_admin",
-    });
+    }, { onConflict: "user_id,role" });
 
     return new Response(
-      JSON.stringify({ success: true, user_id: newUser.user.id, message: "Super admin bootstrapped successfully" }),
+      JSON.stringify({ success: true, user_id: userId, message: "Super admin bootstrapped successfully" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
