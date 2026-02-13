@@ -1,12 +1,25 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Monitor, MapPin } from "lucide-react";
+import { Menu, X, Monitor } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { settings } = useSettings();
+  const { user, role } = useAuth();
+
+  const getDashboardPath = () => {
+    switch (role) {
+      case 'super_admin':
+      case 'admin': return '/admin';
+      case 'accountant': return '/accountant';
+      case 'teacher': return '/teacher';
+      case 'student': return '/student';
+      default: return '/auth';
+    }
+  };
 
   const navLinks = [
     { name: "Programs", href: "#programs" },
@@ -46,16 +59,26 @@ const Navbar = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <Link to="/auth">
-              <Button variant="ghost" size="sm">
-                Sign In
-              </Button>
-            </Link>
-            <Link to="/auth?mode=signup">
-              <Button size="sm" className="bg-gradient-primary hover:opacity-90">
-                Enroll Now
-              </Button>
-            </Link>
+            {user ? (
+              <Link to={getDashboardPath()}>
+                <Button size="sm" className="bg-gradient-primary hover:opacity-90">
+                  Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/auth">
+                  <Button variant="ghost" size="sm">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button size="sm" className="bg-gradient-primary hover:opacity-90">
+                    Enroll Now
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -82,16 +105,26 @@ const Navbar = () => {
                 </a>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                <Link to="/auth" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" className="w-full">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link to="/auth?mode=signup" onClick={() => setIsOpen(false)}>
-                  <Button className="w-full bg-gradient-primary">
-                    Enroll Now
-                  </Button>
-                </Link>
+                {user ? (
+                  <Link to={getDashboardPath()} onClick={() => setIsOpen(false)}>
+                    <Button className="w-full bg-gradient-primary">
+                      Dashboard
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link to="/auth" onClick={() => setIsOpen(false)}>
+                      <Button variant="outline" className="w-full">
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link to="/register" onClick={() => setIsOpen(false)}>
+                      <Button className="w-full bg-gradient-primary">
+                        Enroll Now
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
