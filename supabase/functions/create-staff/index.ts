@@ -18,8 +18,8 @@ Deno.serve(async (req) => {
     }
 
     const anonClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
+      Deno.env.get("LMS_SUPABASE_URL")!,
+      Deno.env.get("LMS_SUPABASE_SERVICE_ROLE_KEY")!,
       { global: { headers: { Authorization: authHeader } } }
     );
 
@@ -33,8 +33,8 @@ Deno.serve(async (req) => {
 
     // Check caller has admin or super_admin role
     const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("LMS_SUPABASE_URL")!,
+      Deno.env.get("LMS_SUPABASE_SERVICE_ROLE_KEY")!
     );
 
     const { data: callerRoles } = await adminClient

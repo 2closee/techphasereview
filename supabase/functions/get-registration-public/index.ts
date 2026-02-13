@@ -32,8 +32,8 @@ serve(async (req) => {
     }
 
     // Initialize Supabase client with service role (bypasses RLS)
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get('LMS_SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('LMS_SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Fetch registration with program info - only fields needed by UI

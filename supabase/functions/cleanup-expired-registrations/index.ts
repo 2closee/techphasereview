@@ -14,15 +14,15 @@ Deno.serve(async (req) => {
     // Verify caller is admin (or allow cron via service role)
     const authHeader = req.headers.get("Authorization");
     const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("LMS_SUPABASE_URL")!,
+      Deno.env.get("LMS_SUPABASE_SERVICE_ROLE_KEY")!
     );
 
     // If auth header present, verify admin role
     if (authHeader?.startsWith("Bearer ")) {
       const anonClient = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_ANON_KEY")!,
+        Deno.env.get("LMS_SUPABASE_URL")!,
+        Deno.env.get("LMS_SUPABASE_SERVICE_ROLE_KEY")!,
         { global: { headers: { Authorization: authHeader } } }
       );
 
