@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
@@ -22,14 +22,12 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Missing required fields: email, password, full_name" }), { status: 400, headers: corsHeaders });
     }
 
-    const lmsUrl = Deno.env.get("LMS_SUPABASE_URL");
-    const lmsServiceKey = Deno.env.get("LMS_SUPABASE_SERVICE_ROLE_KEY");
-    console.log("LMS_SUPABASE_URL value:", JSON.stringify(lmsUrl));
-    console.log("LMS_SUPABASE_SERVICE_ROLE_KEY exists:", !!lmsServiceKey);
-    if (!lmsUrl || !lmsServiceKey) {
-      return new Response(JSON.stringify({ error: "LMS Supabase credentials not configured" }), { status: 500, headers: corsHeaders });
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return new Response(JSON.stringify({ error: "Supabase credentials not configured" }), { status: 500, headers: corsHeaders });
     }
-    const adminClient = createClient(lmsUrl, lmsServiceKey);
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check if any super_admin already exists
     const { data: existingAdmins } = await adminClient
