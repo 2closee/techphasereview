@@ -19,8 +19,12 @@ export default function Auth() {
     if (!loading && user && role) {
       // Redirect based on role
       switch (role) {
+        case 'super_admin':
         case 'admin':
           navigate('/admin');
+          break;
+        case 'accountant':
+          navigate('/accountant');
           break;
         case 'teacher':
           navigate('/teacher');
