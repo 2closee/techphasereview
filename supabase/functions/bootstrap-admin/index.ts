@@ -24,6 +24,8 @@ Deno.serve(async (req) => {
 
     const lmsUrl = Deno.env.get("LMS_SUPABASE_URL");
     const lmsServiceKey = Deno.env.get("LMS_SUPABASE_SERVICE_ROLE_KEY");
+    console.log("LMS_SUPABASE_URL value:", JSON.stringify(lmsUrl));
+    console.log("LMS_SUPABASE_SERVICE_ROLE_KEY exists:", !!lmsServiceKey);
     if (!lmsUrl || !lmsServiceKey) {
       return new Response(JSON.stringify({ error: "LMS Supabase credentials not configured" }), { status: 500, headers: corsHeaders });
     }
