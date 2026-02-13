@@ -1,15 +1,20 @@
 
 
-# Re-run Bootstrap Admin
+# Update LMS_SUPABASE_URL and Re-run Bootstrap
 
-Call the `bootstrap-admin` edge function with the following payload:
+## Step 1: Update the Secret
+Set `LMS_SUPABASE_URL` to exactly: `https://ijmxxysgzkfedumfpyso.supabase.co`
 
-- **email**: Ibinaboloveday@gmail.com
-- **password**: Track1989+
-- **full_name**: Ibinabo Loveday
-- **setup_secret**: SuperAdmin2026!
+## Step 2: Deploy and Execute
+- Redeploy the `bootstrap-admin` edge function
+- Call it with:
+  - **email**: Ibinaboloveday@gmail.com
+  - **password**: Track1989+
+  - **full_name**: Ibinabo Loveday
+  - **setup_secret**: SuperAdmin2026!
 
-If it returns a "super_admin already exists" error (from the old project's data), we will need to first check whether the existing super_admin record is in the correct project and clear it if needed.
-
-After successful bootstrap, verify sign-in works at `/admin/auth`.
+## Step 3: Verify
+- Check logs to confirm the URL is now correct
+- Confirm the response indicates successful super admin creation
+- If "super_admin already exists" error appears, investigate whether it's from a previous successful attempt
 
