@@ -1,61 +1,36 @@
 
 
-# Migrate Edge Functions to Use Current Lovable Cloud Database
+# Fix: Admin Dashboard Not Opening After Login
 
-## What's Happening Now
-All 7 edge functions (`create-staff`, `bootstrap-admin`, `cleanup-expired-registrations`, `get-registration-public`, `paystack-initialize`, `paystack-verify`, `paystack-webhook`) use `LMS_SUPABASE_URL` and `LMS_SUPABASE_SERVICE_ROLE_KEY` secrets to connect to the external LMS database project (`ijmxxysgzkfedumfpyso`).
+## Root Cause
+Your user account (`ba52da2f-...`) has **two entries** in the `user_roles` table: `admin` and `super_admin`. The `fetchUserRole` function in `useAuth.tsx` uses `.single()`, which crashes when multiple rows are returned (406 error: "Cannot coerce the result to a single JSON object"). This means `role` stays `null`, and the Auth page never redirects you to the dashboard.
 
-Since the edge functions are deployed on the Lovable Cloud project (`esbqtuljvejvrzawsqgk`), they can simply use the built-in `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` secrets that are automatically available to every edge function on that project.
+## Solution
 
-## Changes
+### 1. Fix `useAuth.tsx` to handle multiple roles
+Change `fetchUserRole` to use `.limit(1)` with a priority order instead of `.single()`, so it picks the highest-priority role when a user has multiple entries:
 
-### 1. Update All 7 Edge Functions
-Replace every occurrence of:
 ```typescript
-Deno.env.get('LMS_SUPABASE_URL')
-Deno.env.get('LMS_SUPABASE_SERVICE_ROLE_KEY')
-```
-with:
-```typescript
-Deno.env.get('SUPABASE_URL')
-Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-```
+const fetchUserRole = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .order('role', { ascending: true })
+    .limit(1);
 
-Also update CORS headers in all functions to include the additional Supabase client headers to prevent CORS issues:
-```typescript
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  if (data && data.length > 0 && !error) {
+    setRole(data[0].role as AppRole);
+  } else {
+    setRole(null);
+  }
 };
 ```
 
-**Files:**
-- `supabase/functions/create-staff/index.ts`
-- `supabase/functions/bootstrap-admin/index.ts`
-- `supabase/functions/cleanup-expired-registrations/index.ts`
-- `supabase/functions/get-registration-public/index.ts`
-- `supabase/functions/paystack-initialize/index.ts`
-- `supabase/functions/paystack-verify/index.ts`
-- `supabase/functions/paystack-webhook/index.ts`
+### 2. Clean up duplicate role in database
+Remove the redundant `admin` role entry since `super_admin` already grants full admin access. A database migration will delete the duplicate row.
 
-### 2. Update Frontend Supabase Client
-Update `src/integrations/supabase/client.ts` to point to the Lovable Cloud project so that `supabase.functions.invoke()` calls reach the correct edge functions:
-```typescript
-const SUPABASE_URL = "https://esbqtuljvejvrzawsqgk.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "<lovable cloud anon key>";
-```
-
-**Note:** This file is auto-generated but since the app architecture requires all data on the Lovable Cloud project, we need it to point there.
-
-### 3. Redeploy All Edge Functions
-After updating, all 7 functions will be redeployed automatically.
-
-## What This Achieves
-- All edge functions will read/write data from the same Lovable Cloud database that the frontend uses
-- `supabase.functions.invoke()` calls from the frontend will work correctly (no more "Failed to send request" errors)
-- No more dependency on the external LMS project
-- The built-in `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` secrets are already available -- no new secrets needed
-
-## Important Note
-The LMS tables (like `student_registrations`, `programs`, `enrollment_payments`, etc.) must already exist in the Lovable Cloud database for this to work. If they were only in the external project, a database migration will be needed first.
+## Files to Change
+- `src/hooks/useAuth.tsx` -- replace `.single()` with `.limit(1)` and pick first result
+- New SQL migration -- delete the duplicate `admin` role for the affected user
 
