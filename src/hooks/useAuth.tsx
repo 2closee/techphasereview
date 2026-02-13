@@ -27,10 +27,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .single();
+      .order('role', { ascending: true })
+      .limit(1);
     
-    if (data && !error) {
-      setRole(data.role as AppRole);
+    if (data && data.length > 0 && !error) {
+      setRole(data[0].role as AppRole);
     } else {
       setRole(null);
     }
