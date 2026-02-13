@@ -7,19 +7,10 @@
 -- ============================================================
 -- CLEANUP PREAMBLE (safe to re-run)
 -- ============================================================
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP TRIGGER IF EXISTS trg_assign_student_role ON public.student_registrations;
-DROP TRIGGER IF EXISTS trigger_assign_student_to_batch ON public.student_registrations;
-DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
-DROP TRIGGER IF EXISTS update_programs_updated_at ON public.programs;
-DROP TRIGGER IF EXISTS update_teachers_updated_at ON public.teachers;
-DROP TRIGGER IF EXISTS update_course_batches_updated_at ON public.course_batches;
-DROP TRIGGER IF EXISTS update_student_registrations_updated_at ON public.student_registrations;
-DROP TRIGGER IF EXISTS update_student_payments_updated_at ON public.student_payments;
-DROP TRIGGER IF EXISTS update_training_sessions_updated_at ON public.training_sessions;
-DROP TRIGGER IF EXISTS update_training_locations_updated_at ON public.training_locations;
-DROP TRIGGER IF EXISTS update_course_progress_updated_at ON public.course_progress;
-DROP TRIGGER IF EXISTS update_attendance_updated_at ON public.attendance;
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
 
 DROP TABLE IF EXISTS public.geolocation_checkins CASCADE;
 DROP TABLE IF EXISTS public.session_enrollments CASCADE;
