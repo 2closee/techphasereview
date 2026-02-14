@@ -1,0 +1,1 @@
+ALTER TABLE public.student_registrations ADD COLUMN IF NOT EXISTS payment_plan TEXT DEFAULT 'full';
