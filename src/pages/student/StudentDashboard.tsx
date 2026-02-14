@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { BookOpen, Clock, CreditCard, Award, Calendar, Loader2, CheckCircle2, Users, MapPin, IdCard, AlertTriangle, GraduationCap } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const WARRI_LOCATION_ID = 'af2ca449-9394-46dd-b4b3-216bb50e9aeb';
 
@@ -80,7 +81,9 @@ interface UpcomingSession {
 
 export default function StudentDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [showScholarshipPrompt, setShowScholarshipPrompt] = useState(false);
   const [registration, setRegistration] = useState<StudentRegistration | null>(null);
   const [batchInfo, setBatchInfo] = useState<BatchInfo | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -260,6 +263,12 @@ export default function StudentDashboard() {
 
         if (scholarshipData) {
           setScholarshipStatus(scholarshipData);
+        } else {
+          // No scholarship application - show prompt if not dismissed this session
+          const dismissed = sessionStorage.getItem('scholarship_prompt_dismissed');
+          if (!dismissed) {
+            setShowScholarshipPrompt(true);
+          }
         }
       }
     } catch (error) {
@@ -338,7 +347,40 @@ export default function StudentDashboard() {
   return (
     <DashboardLayout title="Student Dashboard">
       <div className="space-y-6">
-        {/* Pending payment banner for office_pending or partial */}
+        {/* Scholarship Prompt Dialog */}
+        <Dialog open={showScholarshipPrompt} onOpenChange={setShowScholarshipPrompt}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-primary" />
+                Need Financial Assistance?
+              </DialogTitle>
+              <DialogDescription>
+                You may be eligible for a scholarship covering 30% to 100% of your tuition fees. Apply now and get a decision within days!
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex-row gap-2 sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  sessionStorage.setItem('scholarship_prompt_dismissed', 'true');
+                  setShowScholarshipPrompt(false);
+                }}
+              >
+                Maybe Later
+              </Button>
+              <Button
+                onClick={() => {
+                  sessionStorage.setItem('scholarship_prompt_dismissed', 'true');
+                  setShowScholarshipPrompt(false);
+                  navigate('/student/scholarship');
+                }}
+              >
+                Apply Now
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         {(registration.payment_status === 'office_pending' || registration.payment_status === 'unpaid') && (
           <Card className="border-orange-500/30 bg-orange-500/10">
             <CardContent className="p-4">
