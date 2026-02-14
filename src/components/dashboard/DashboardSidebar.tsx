@@ -20,6 +20,7 @@ import {
   Layers,
   Shield,
   MapPin,
+  Award,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -42,6 +43,7 @@ const adminNavItems: NavItem[] = [
   { title: 'Geo Check-ins', href: '/admin/geolocation', icon: Clock },
   { title: 'Payments', href: '/admin/payments', icon: CreditCard },
   { title: 'Reports', href: '/admin/reports', icon: BarChart3 },
+  { title: 'Scholarships', href: '/admin/scholarships', icon: Award },
   { title: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
@@ -62,6 +64,7 @@ const studentNavItems: NavItem[] = [
   { title: 'My Courses', href: '/student/courses', icon: BookOpen },
   { title: 'Grades', href: '/student/grades', icon: FileText },
   { title: 'Payments', href: '/student/payments', icon: CreditCard },
+  { title: 'Scholarship', href: '/student/scholarship', icon: Award },
   { title: 'Profile', href: '/student/profile', icon: UserCircle },
 ];
 
