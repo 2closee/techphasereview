@@ -7,13 +7,13 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { registration_id } = await req.json();
+    const body = await req.json();
+    const { registration_id, update_payment_status, update_payment_plan } = body;
 
     if (!registration_id) {
       return new Response(
@@ -22,7 +22,6 @@ serve(async (req) => {
       );
     }
 
-    // Basic UUID validation
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(registration_id)) {
       return new Response(
@@ -31,12 +30,56 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client with service role (bypasses RLS)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch registration with program info - only fields needed by UI
+    // Handle update operations (pay at office, payment plan)
+    if (update_payment_status || update_payment_plan) {
+      const updateData: Record<string, string> = {};
+      
+      if (update_payment_status) {
+        const allowedStatuses = ['office_pending'];
+        if (!allowedStatuses.includes(update_payment_status)) {
+          return new Response(
+            JSON.stringify({ error: 'Invalid payment status' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        updateData.payment_status = update_payment_status;
+      }
+      
+      if (update_payment_plan) {
+        const allowedPlans = ['full', '2_installments', '3_installments', 'office_pay'];
+        if (!allowedPlans.includes(update_payment_plan)) {
+          return new Response(
+            JSON.stringify({ error: 'Invalid payment plan' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        updateData.payment_plan = update_payment_plan;
+      }
+
+      const { error: updateError } = await supabase
+        .from('student_registrations')
+        .update(updateData)
+        .eq('id', registration_id);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to update registration' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Fetch registration with program info
     const { data: registration, error: fetchError } = await supabase
       .from('student_registrations')
       .select(`
@@ -47,6 +90,7 @@ serve(async (req) => {
         program_id,
         payment_status,
         account_created,
+        payment_plan,
         programs:program_id (
           name,
           tuition_fee,

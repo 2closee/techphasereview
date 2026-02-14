@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { registration_id, callback_url } = await req.json();
+    const { registration_id, callback_url, amount_override } = await req.json();
 
     if (!registration_id) {
       console.error('Missing registration_id');
@@ -68,7 +68,11 @@ serve(async (req) => {
 
     // Calculate total amount (tuition + registration fee) in kobo (Paystack uses kobo)
     const program = registration.programs as { name: string; tuition_fee: number; registration_fee: number | null };
-    const totalAmount = (program.tuition_fee || 0) + (program.registration_fee || 0);
+    const fullAmount = (program.tuition_fee || 0) + (program.registration_fee || 0);
+    // Support partial/installment payments via amount_override
+    const totalAmount = amount_override && amount_override > 0 && amount_override <= fullAmount 
+      ? amount_override 
+      : fullAmount;
     const amountInKobo = totalAmount * 100;
 
     console.log('Payment amount:', totalAmount, 'NGN (', amountInKobo, 'kobo)');
