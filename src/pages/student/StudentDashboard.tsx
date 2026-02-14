@@ -279,7 +279,11 @@ export default function StudentDashboard() {
 
   const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
   const tuitionFee = registration?.programs?.tuition_fee || 0;
-  const balanceDue = Math.max(0, tuitionFee - totalPaid);
+  const scholarshipDiscount = scholarshipStatus?.status === 'approved' && scholarshipStatus.granted_percentage
+    ? tuitionFee * (scholarshipStatus.granted_percentage / 100)
+    : 0;
+  const effectiveTuition = tuitionFee - scholarshipDiscount;
+  const balanceDue = Math.max(0, effectiveTuition - totalPaid);
   const isPaid = balanceDue === 0 && tuitionFee > 0;
 
   if (loading) {
