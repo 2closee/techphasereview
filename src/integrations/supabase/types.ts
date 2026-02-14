@@ -622,6 +622,84 @@ export type Database = {
         }
         Relationships: []
       }
+      scholarship_applications: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          employment_status: string
+          granted_percentage: number | null
+          household_size: number
+          how_training_helps: string
+          id: string
+          monthly_income: string
+          motivation: string
+          program_id: string
+          requested_percentage: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_id: string
+          supporting_info: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          employment_status: string
+          granted_percentage?: number | null
+          household_size?: number
+          how_training_helps: string
+          id?: string
+          monthly_income: string
+          motivation: string
+          program_id: string
+          requested_percentage?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id: string
+          supporting_info?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          employment_status?: string
+          granted_percentage?: number | null
+          household_size?: number
+          how_training_helps?: string
+          id?: string
+          monthly_income?: string
+          motivation?: string
+          program_id?: string
+          requested_percentage?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id?: string
+          supporting_info?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scholarship_applications_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scholarship_applications_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_enrollments: {
         Row: {
           enrolled_at: string | null
