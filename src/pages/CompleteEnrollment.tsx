@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { GraduationCap, Loader2, CheckCircle2, Lock, Mail, CreditCard, AlertCircle } from 'lucide-react';
+import { GraduationCap, Loader2, CheckCircle2, Lock, Mail, CreditCard, AlertCircle, Building2, CalendarClock } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 
@@ -18,6 +19,7 @@ interface RegistrationData {
   program_id: string;
   payment_status: string;
   account_created: boolean;
+  payment_plan: string;
   programs?: {
     name: string;
     tuition_fee: number;
@@ -26,6 +28,7 @@ interface RegistrationData {
 }
 
 type Step = 'loading' | 'payment' | 'verifying' | 'create-account' | 'invalid';
+type PaymentPlan = 'full' | '2_installments' | '3_installments';
 
 export default function CompleteEnrollment() {
   const navigate = useNavigate();
@@ -40,6 +43,7 @@ export default function CompleteEnrollment() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [paymentInitializing, setPaymentInitializing] = useState(false);
+  const [paymentPlan, setPaymentPlan] = useState<PaymentPlan>('full');
 
   useEffect(() => {
     if (registrationId) {
@@ -49,7 +53,6 @@ export default function CompleteEnrollment() {
     }
   }, [registrationId]);
 
-  // Handle payment callback verification
   useEffect(() => {
     if (reference && registration && step === 'payment') {
       verifyPayment(reference);
@@ -58,7 +61,6 @@ export default function CompleteEnrollment() {
 
   const fetchRegistration = async () => {
     try {
-      // Use edge function to fetch registration (bypasses RLS securely)
       const { data, error } = await supabase.functions.invoke('get-registration-public', {
         body: { registration_id: registrationId }
       });
@@ -78,7 +80,6 @@ export default function CompleteEnrollment() {
 
       const reg = data.registration;
 
-      // Check if account already created
       if (reg.account_created) {
         toast.info('Account already created. Please sign in.');
         navigate('/auth');
@@ -87,8 +88,7 @@ export default function CompleteEnrollment() {
 
       setRegistration(reg as RegistrationData);
 
-      // Determine which step to show
-      if (reg.payment_status === 'paid') {
+      if (reg.payment_status === 'paid' || reg.payment_status === 'office_pending' || reg.payment_status === 'partial') {
         setStep('create-account');
       } else {
         setStep('payment');
@@ -102,17 +102,13 @@ export default function CompleteEnrollment() {
 
   const verifyPayment = async (ref: string) => {
     setStep('verifying');
-    
     try {
       const { data, error } = await supabase.functions.invoke('paystack-verify', {
         body: { reference: ref }
       });
-
       if (error) throw error;
-
       if (data.payment_successful) {
         toast.success('Payment verified successfully!');
-        // Refresh registration data
         await fetchRegistration();
       } else {
         toast.error('Payment verification failed. Please try again.');
@@ -125,26 +121,41 @@ export default function CompleteEnrollment() {
     }
   };
 
+  const totalFee = registration
+    ? (registration.programs?.tuition_fee || 0) + (registration.programs?.registration_fee || 0)
+    : 0;
+
+  const getInstallmentAmount = () => {
+    if (paymentPlan === '2_installments') return Math.ceil(totalFee / 2);
+    if (paymentPlan === '3_installments') return Math.ceil(totalFee / 3);
+    return totalFee;
+  };
+
   const handlePayNow = async () => {
     if (!registration) return;
-    
     setPaymentInitializing(true);
     setError('');
 
     try {
+      // Save the payment plan choice
+      await supabase.functions.invoke('get-registration-public', {
+        body: { registration_id: registration.id, update_payment_plan: paymentPlan }
+      });
+
+      const amountToPay = getInstallmentAmount();
       const callbackUrl = `${window.location.origin}/complete-enrollment?registration_id=${registration.id}`;
       
       const { data, error } = await supabase.functions.invoke('paystack-initialize', {
         body: { 
           registration_id: registration.id,
-          callback_url: callbackUrl
+          callback_url: callbackUrl,
+          amount_override: paymentPlan !== 'full' ? amountToPay : undefined
         }
       });
 
       if (error) throw error;
 
       if (data.authorization_url) {
-        // Redirect to Paystack checkout
         window.location.href = data.authorization_url;
       } else {
         throw new Error('No authorization URL returned');
@@ -155,6 +166,34 @@ export default function CompleteEnrollment() {
       toast.error('Failed to start payment. Please try again.');
     } finally {
       setPaymentInitializing(false);
+    }
+  };
+
+  const handlePayAtOffice = async () => {
+    if (!registration) return;
+    setSubmitting(true);
+    setError('');
+
+    try {
+      // Update registration to office_pending via edge function
+      const { data, error } = await supabase.functions.invoke('get-registration-public', {
+        body: { 
+          registration_id: registration.id, 
+          update_payment_status: 'office_pending',
+          update_payment_plan: 'office_pay'
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success('You can now create your account and pay at the office later.');
+      setRegistration(prev => prev ? { ...prev, payment_status: 'office_pending', payment_plan: 'office_pay' } : null);
+      setStep('create-account');
+    } catch (err: any) {
+      console.error('Pay at office error:', err);
+      setError(err.message || 'Failed to process. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -177,7 +216,6 @@ export default function CompleteEnrollment() {
     setSubmitting(true);
 
     try {
-      // Create the auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: registration.email,
         password,
@@ -191,7 +229,6 @@ export default function CompleteEnrollment() {
 
       if (authError) throw authError;
 
-      // Check for fake success (user already exists - Supabase returns empty identities)
       if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
         setError('An account with this email already exists. Please sign in instead.');
         toast.error('Account already exists. Please sign in.');
@@ -200,7 +237,6 @@ export default function CompleteEnrollment() {
       }
 
       if (authData.user) {
-        // Assign student role
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({
@@ -212,7 +248,6 @@ export default function CompleteEnrollment() {
           console.error('Role assignment error:', roleError);
         }
 
-        // Link user to registration
         const { error: updateError } = await supabase
           .from('student_registrations')
           .update({
@@ -227,7 +262,6 @@ export default function CompleteEnrollment() {
 
         toast.success('Account created successfully!');
         
-        // Auto sign in
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: registration.email,
           password,
@@ -257,7 +291,6 @@ export default function CompleteEnrollment() {
     }).format(amount);
   };
 
-  // Loading state
   if (step === 'loading' || step === 'verifying') {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
@@ -269,7 +302,6 @@ export default function CompleteEnrollment() {
     );
   }
 
-  // Invalid registration
   if (step === 'invalid' || !registration) {
     return (
       <div className="min-h-screen bg-background">
@@ -292,8 +324,6 @@ export default function CompleteEnrollment() {
     );
   }
 
-  const totalFee = (registration.programs?.tuition_fee || 0) + (registration.programs?.registration_fee || 0);
-
   // Payment step
   if (step === 'payment') {
     return (
@@ -310,7 +340,7 @@ export default function CompleteEnrollment() {
                   Complete Your Payment
                 </CardTitle>
                 <CardDescription>
-                  Hi {registration.first_name}, please pay your enrollment fees to create your account
+                  Hi {registration.first_name}, choose your payment option below
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -318,11 +348,9 @@ export default function CompleteEnrollment() {
                 <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
                   <div className="flex items-center gap-3 mb-3">
                     <GraduationCap className="w-5 h-5 text-primary" />
-                    <div>
-                      <p className="font-medium text-foreground">
-                        {registration.programs?.name || 'Selected Program'}
-                      </p>
-                    </div>
+                    <p className="font-medium text-foreground">
+                      {registration.programs?.name || 'Selected Program'}
+                    </p>
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
@@ -342,6 +370,36 @@ export default function CompleteEnrollment() {
                   </div>
                 </div>
 
+                {/* Payment Plan Selection */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold">Payment Plan</Label>
+                  <RadioGroup value={paymentPlan} onValueChange={(v) => setPaymentPlan(v as PaymentPlan)} className="space-y-2">
+                    <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${paymentPlan === 'full' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
+                      <RadioGroupItem value="full" id="full" />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm text-foreground">Pay in Full</p>
+                        <p className="text-xs text-muted-foreground">{formatCurrency(totalFee)} — one-time payment</p>
+                      </div>
+                    </label>
+                    <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${paymentPlan === '2_installments' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
+                      <RadioGroupItem value="2_installments" id="2inst" />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm text-foreground">2 Installments</p>
+                        <p className="text-xs text-muted-foreground">{formatCurrency(Math.ceil(totalFee / 2))} × 2 payments</p>
+                      </div>
+                      <CalendarClock className="w-4 h-4 text-muted-foreground" />
+                    </label>
+                    <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${paymentPlan === '3_installments' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
+                      <RadioGroupItem value="3_installments" id="3inst" />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm text-foreground">3 Installments</p>
+                        <p className="text-xs text-muted-foreground">{formatCurrency(Math.ceil(totalFee / 3))} × 3 payments</p>
+                      </div>
+                      <CalendarClock className="w-4 h-4 text-muted-foreground" />
+                    </label>
+                  </RadioGroup>
+                </div>
+
                 {/* Email reminder */}
                 <div className="p-3 bg-secondary/50 rounded-lg flex items-center gap-3">
                   <Mail className="w-4 h-4 text-muted-foreground" />
@@ -355,18 +413,48 @@ export default function CompleteEnrollment() {
                   </div>
                 )}
 
+                {/* Pay Online button */}
                 <Button
                   variant="gold"
                   className="w-full"
                   onClick={handlePayNow}
-                  disabled={paymentInitializing}
+                  disabled={paymentInitializing || submitting}
                 >
                   {paymentInitializing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Pay {formatCurrency(totalFee)} with Paystack
+                  {paymentPlan === 'full' 
+                    ? `Pay ${formatCurrency(totalFee)} with Paystack`
+                    : `Pay 1st Installment ${formatCurrency(getInstallmentAmount())} with Paystack`
+                  }
                 </Button>
 
+                {/* Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">or</span>
+                  </div>
+                </div>
+
+                {/* Pay at Office button */}
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handlePayAtOffice}
+                  disabled={paymentInitializing || submitting}
+                >
+                  {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  <Building2 className="w-4 h-4 mr-2" />
+                  Pay at Office Instead
+                </Button>
                 <p className="text-xs text-center text-muted-foreground">
-                  Secured by Paystack. Your payment information is encrypted and secure.
+                  Choose "Pay at Office" to create your account now and pay in person later. 
+                  Dashboard access will be limited until payment is confirmed.
+                </p>
+
+                <p className="text-xs text-center text-muted-foreground">
+                  Online payments are secured by Paystack. Your payment information is encrypted.
                 </p>
               </CardContent>
             </Card>
@@ -377,7 +465,9 @@ export default function CompleteEnrollment() {
     );
   }
 
-  // Create account step (after successful payment)
+  // Create account step
+  const isOfficePay = registration.payment_status === 'office_pending';
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -385,14 +475,20 @@ export default function CompleteEnrollment() {
         <div className="container mx-auto max-w-md">
           <Card className="border-primary/20">
             <CardHeader className="text-center pb-2">
-              <div className="mx-auto w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mb-4">
-                <CheckCircle2 className="w-8 h-8 text-green-500" />
+              <div className={`mx-auto w-16 h-16 ${isOfficePay ? 'bg-orange-500/10' : 'bg-green-500/10'} rounded-full flex items-center justify-center mb-4`}>
+                {isOfficePay 
+                  ? <Building2 className="w-8 h-8 text-orange-500" />
+                  : <CheckCircle2 className="w-8 h-8 text-green-500" />
+                }
               </div>
               <CardTitle className="text-2xl font-display">
-                Payment Successful!
+                {isOfficePay ? 'Pay at Office Selected' : 'Payment Successful!'}
               </CardTitle>
               <CardDescription>
-                Welcome, {registration.first_name}! Create your account to access your student dashboard.
+                {isOfficePay 
+                  ? `${registration.first_name}, create your account now. Remember to pay at the office to unlock full access.`
+                  : `Welcome, ${registration.first_name}! Create your account to access your student dashboard.`
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -405,11 +501,19 @@ export default function CompleteEnrollment() {
                       {registration.programs?.name || 'Selected Program'}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      You're enrolled in this program
+                      {isOfficePay ? 'Payment pending — pay at office' : "You're enrolled in this program"}
                     </p>
                   </div>
                 </div>
               </div>
+
+              {isOfficePay && (
+                <div className="p-3 mb-6 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                  <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">
+                    ⚠️ Your dashboard access will be limited until payment is confirmed by the office.
+                  </p>
+                </div>
+              )}
 
               <form onSubmit={handleCreateAccount} className="space-y-4">
                 <div className="space-y-2">

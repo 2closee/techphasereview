@@ -2230,6 +2230,7 @@ export type Database = {
           matriculation_number: string | null
           middle_name: string | null
           notes: string | null
+          payment_plan: string
           payment_status: string
           phone: string
           preferred_location_id: string | null
@@ -2273,6 +2274,7 @@ export type Database = {
           matriculation_number?: string | null
           middle_name?: string | null
           notes?: string | null
+          payment_plan?: string
           payment_status?: string
           phone: string
           preferred_location_id?: string | null
@@ -2316,6 +2318,7 @@ export type Database = {
           matriculation_number?: string | null
           middle_name?: string | null
           notes?: string | null
+          payment_plan?: string
           payment_status?: string
           phone?: string
           preferred_location_id?: string | null

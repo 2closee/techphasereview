@@ -106,11 +106,32 @@ serve(async (req) => {
     if (isSuccessful) {
       console.log('Payment successful, updating registration:', registrationId);
       
+      // Check total paid vs total fee to determine if fully paid or partial
+      const { data: regData } = await supabase
+        .from('student_registrations')
+        .select('payment_plan, programs:program_id (tuition_fee, registration_fee)')
+        .eq('id', registrationId)
+        .single();
+
+      const { data: allPayments } = await supabase
+        .from('enrollment_payments')
+        .select('amount, status')
+        .eq('registration_id', registrationId)
+        .eq('status', 'completed');
+
+      const program = regData?.programs as { tuition_fee: number; registration_fee: number | null } | null;
+      const totalFee = (program?.tuition_fee || 0) + (program?.registration_fee || 0);
+      const totalPaid = (allPayments || []).reduce((sum: number, p: any) => sum + Number(p.amount), 0);
+      const isFullyPaid = totalPaid >= totalFee;
+      const paymentPlan = regData?.payment_plan || 'full';
+
+      const newStatus = isFullyPaid ? 'paid' : 'partial';
+
       const { error: updateRegError } = await supabase
         .from('student_registrations')
         .update({ 
-          payment_status: 'paid',
-          status: 'approved' // Auto-approve paid registrations
+          payment_status: newStatus,
+          status: (isFullyPaid || paymentPlan !== 'full') ? 'approved' : 'approved'
         })
         .eq('id', registrationId);
 
@@ -126,7 +147,7 @@ serve(async (req) => {
         );
       }
 
-      console.log('Registration updated successfully');
+      console.log('Registration updated successfully, status:', newStatus);
     }
 
     return new Response(

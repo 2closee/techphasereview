@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Clock, CreditCard, Award, Calendar, Loader2, CheckCircle2, Users, MapPin, IdCard } from 'lucide-react';
+import { BookOpen, Clock, CreditCard, Award, Calendar, Loader2, CheckCircle2, Users, MapPin, IdCard, AlertTriangle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -274,6 +274,28 @@ export default function StudentDashboard() {
   return (
     <DashboardLayout title="Student Dashboard">
       <div className="space-y-6">
+        {/* Pending payment banner for office_pending or partial */}
+        {(registration.payment_status === 'office_pending' || registration.payment_status === 'unpaid') && (
+          <Card className="border-orange-500/30 bg-orange-500/10">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-orange-500 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="font-semibold text-foreground">Payment Pending</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {registration.payment_status === 'office_pending'
+                      ? 'You selected "Pay at Office". Please visit the office to complete your payment and unlock full dashboard access.'
+                      : 'Your tuition payment is pending. Please complete your payment to unlock full dashboard access.'}
+                  </p>
+                  <p className="text-sm font-medium text-orange-600 dark:text-orange-400 mt-2">
+                    Amount due: {formatCurrency(tuitionFee)}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Welcome banner */}
         <Card className="bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-transparent border-purple-500/20">
           <CardContent className="p-6">
