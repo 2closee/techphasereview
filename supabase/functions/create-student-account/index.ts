@@ -40,6 +40,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (regError || !registration) {
+      console.error("Registration lookup error:", regError);
       return new Response(
         JSON.stringify({ error: "Registration not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -57,14 +58,38 @@ Deno.serve(async (req) => {
     const fullName = `${registration.first_name} ${registration.last_name}`;
     let userId: string;
 
-    // 2. Check if user already exists
-    const { data: existingUsers } = await adminClient.auth.admin.listUsers();
+    // 2. Check if user already exists (efficient filtered lookup)
+    const { data: existingUsers, error: listErr } = await adminClient.auth.admin.listUsers({
+      page: 1,
+      perPage: 50,
+    });
+
+    if (listErr) {
+      console.error("listUsers error:", listErr);
+    }
+
     const existingUser = existingUsers?.users?.find(
       (u: any) => u.email?.toLowerCase() === email.toLowerCase()
     );
 
     if (existingUser) {
       userId = existingUser.id;
+      
+      // CRITICAL FIX: Update password so the new password the student just typed works
+      const { error: updateErr } = await adminClient.auth.admin.updateUserById(userId, {
+        password: password,
+        email_confirm: true,
+      });
+
+      if (updateErr) {
+        console.error("Password update error for existing user:", updateErr);
+        return new Response(
+          JSON.stringify({ error: "Failed to update account credentials: " + updateErr.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      console.log(`Updated password for existing user ${userId} (${email})`);
     } else {
       // 3. Create new user with email auto-confirmed
       const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
@@ -75,6 +100,7 @@ Deno.serve(async (req) => {
       });
 
       if (createErr) {
+        console.error("Create user error:", createErr);
         return new Response(
           JSON.stringify({ error: createErr.message }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -82,14 +108,19 @@ Deno.serve(async (req) => {
       }
 
       userId = newUser.user.id;
+      console.log(`Created new user ${userId} (${email})`);
     }
 
     // 4. Upsert profile
-    await adminClient.from("profiles").upsert({
+    const { error: profileErr } = await adminClient.from("profiles").upsert({
       id: userId,
       email,
       full_name: fullName,
     });
+
+    if (profileErr) {
+      console.error("Profile upsert error:", profileErr);
+    }
 
     // 5. Assign student role (skip if already exists)
     const { data: existingRole } = await adminClient
@@ -106,6 +137,8 @@ Deno.serve(async (req) => {
 
       if (roleErr) {
         console.error("Role assignment error:", roleErr);
+      } else {
+        console.log(`Assigned student role to ${userId}`);
       }
     }
 
