@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { GraduationCap, Loader2, CheckCircle2, Lock, Mail, CreditCard, AlertCircle, Building2, CalendarClock } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface RegistrationData {
   id: string;
@@ -33,9 +34,12 @@ type PaymentPlan = 'full' | '2_installments' | '3_installments';
 export default function CompleteEnrollment() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { settings } = useSettings();
   const registrationId = searchParams.get('registration_id');
   const reference = searchParams.get('reference') || searchParams.get('trxref');
   
+  const partialPercent = (settings.partial_payment_percentage as number) || 50;
+
   const [step, setStep] = useState<Step>('loading');
   const [submitting, setSubmitting] = useState(false);
   const [registration, setRegistration] = useState<RegistrationData | null>(null);
@@ -126,9 +130,15 @@ export default function CompleteEnrollment() {
     : 0;
 
   const getInstallmentAmount = () => {
-    if (paymentPlan === '2_installments') return Math.ceil(totalFee / 2);
-    if (paymentPlan === '3_installments') return Math.ceil(totalFee / 3);
+    if (paymentPlan === '2_installments') return Math.ceil(totalFee * partialPercent / 100);
+    if (paymentPlan === '3_installments') return Math.ceil(totalFee * partialPercent / 100);
     return totalFee;
+  };
+
+  const getInstallmentLabel = () => {
+    if (paymentPlan === '2_installments') return `${partialPercent}% now, ${100 - partialPercent}% later`;
+    if (paymentPlan === '3_installments') return `${partialPercent}% now, rest in 2 parts`;
+    return 'one-time payment';
   };
 
   const handlePayNow = async () => {
@@ -385,7 +395,7 @@ export default function CompleteEnrollment() {
                       <RadioGroupItem value="2_installments" id="2inst" />
                       <div className="flex-1">
                         <p className="font-medium text-sm text-foreground">2 Installments</p>
-                        <p className="text-xs text-muted-foreground">{formatCurrency(Math.ceil(totalFee / 2))} × 2 payments</p>
+                        <p className="text-xs text-muted-foreground">{formatCurrency(Math.ceil(totalFee * partialPercent / 100))} now ({partialPercent}%), balance later</p>
                       </div>
                       <CalendarClock className="w-4 h-4 text-muted-foreground" />
                     </label>
@@ -393,7 +403,7 @@ export default function CompleteEnrollment() {
                       <RadioGroupItem value="3_installments" id="3inst" />
                       <div className="flex-1">
                         <p className="font-medium text-sm text-foreground">3 Installments</p>
-                        <p className="text-xs text-muted-foreground">{formatCurrency(Math.ceil(totalFee / 3))} × 3 payments</p>
+                        <p className="text-xs text-muted-foreground">{formatCurrency(Math.ceil(totalFee * partialPercent / 100))} now ({partialPercent}%), rest in 2 parts</p>
                       </div>
                       <CalendarClock className="w-4 h-4 text-muted-foreground" />
                     </label>

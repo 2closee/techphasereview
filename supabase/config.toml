@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.cleanup-expired-registrations]
 verify_jwt = false
+
+[functions.change-staff-password]
+verify_jwt = false

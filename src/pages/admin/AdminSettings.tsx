@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useSettings } from "@/contexts/SettingsContext";
 import {
-  Building2, Type, GraduationCap, MapPin, Award, Palette, Plus, Pencil, Trash2, Save, Loader2,
+  Building2, Type, GraduationCap, MapPin, Award, Palette, Plus, Pencil, Trash2, Save, Loader2, CreditCard,
 } from "lucide-react";
 
 const AdminSettings = () => {
@@ -42,6 +42,9 @@ const AdminSettings = () => {
     contact_email: settings.contact_email,
     contact_phone: settings.contact_phone,
     contact_address: settings.contact_address,
+  });
+  const [paymentForm, setPaymentForm] = useState({
+    partial_payment_percentage: (settings.partial_payment_percentage as number) || 50,
   });
 
   const saveSettings = async (fields: Record<string, unknown>, section: string) => {
@@ -140,6 +143,7 @@ const AdminSettings = () => {
             <TabsTrigger value="attendance"><MapPin className="w-4 h-4 mr-2" />Attendance</TabsTrigger>
             <TabsTrigger value="categories"><GraduationCap className="w-4 h-4 mr-2" />Categories</TabsTrigger>
             <TabsTrigger value="certifications"><Award className="w-4 h-4 mr-2" />Certifications</TabsTrigger>
+            <TabsTrigger value="payment-plans"><CreditCard className="w-4 h-4 mr-2" />Payment Plans</TabsTrigger>
           </TabsList>
 
           {/* Branding */}
@@ -397,6 +401,38 @@ const AdminSettings = () => {
                     </TableBody>
                   </Table>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Payment Plans */}
+          <TabsContent value="payment-plans">
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Plans</CardTitle>
+                <CardDescription>Configure installment payment options for student enrollment</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Minimum First Payment Percentage (%)</Label>
+                  <p className="text-sm text-muted-foreground">
+                    When students choose installment plans, the first payment must be at least this percentage of the total fee.
+                  </p>
+                  <Input
+                    type="number"
+                    min={10}
+                    max={90}
+                    value={paymentForm.partial_payment_percentage}
+                    onChange={(e) => setPaymentForm({ partial_payment_percentage: Number(e.target.value) })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Example: If set to 50%, a ₦100,000 program requires at least ₦50,000 as the first installment.
+                  </p>
+                </div>
+                <Button onClick={() => saveSettings(paymentForm, "Payment Plans")} disabled={isSaving("Payment Plans")}>
+                  {isSaving("Payment Plans") ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                  Save
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>

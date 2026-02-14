@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Users, Plus, Search, Shield, UserCheck, Mail, Trash2, DollarSign, ShieldCheck } from "lucide-react";
+import { Users, Plus, Search, Shield, UserCheck, Mail, Trash2, DollarSign, ShieldCheck, KeyRound, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 type StaffRole = 'admin' | 'teacher' | 'accountant' | 'super_admin';
@@ -31,6 +31,10 @@ const AdminStaff = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [passwordTarget, setPasswordTarget] = useState<{ userId: string; name: string } | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -126,6 +130,30 @@ const AdminStaff = () => {
   });
 
   const resetForm = () => setFormData({ email: "", password: "", full_name: "", role: "" });
+
+  const handleChangePassword = async () => {
+    if (!passwordTarget) return;
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("change-staff-password", {
+        body: { user_id: passwordTarget.userId, new_password: newPassword },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Password changed for ${passwordTarget.name}`);
+      setPasswordDialogOpen(false);
+      setNewPassword("");
+      setPasswordTarget(null);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to change password");
+    } finally {
+      setChangingPassword(false);
+    }
+  };
 
   const handleSubmit = () => {
     if (!formData.email || !formData.password || !formData.full_name || !formData.role) {
@@ -265,11 +293,16 @@ const AdminStaff = () => {
                       <TableCell><div className="flex items-center gap-1 text-sm"><Mail className="h-3 w-3" />{member.email || "—"}</div></TableCell>
                       <TableCell><Badge variant={member.role === "admin" || member.role === "super_admin" ? "default" : "secondary"} className="capitalize">{roleIcon(member.role)}{member.role.replace('_', ' ')}</Badge></TableCell>
                       <TableCell><Badge variant={member.is_suspended ? "destructive" : "outline"}>{member.is_suspended ? "Suspended" : "Active"}</Badge></TableCell>
-                      <TableCell className="text-right space-x-2">
+                      <TableCell className="text-right space-x-1">
                         {isSuperAdmin && (
-                          <Button variant="ghost" size="sm" onClick={() => toggleSuspensionMutation.mutate({ userId: member.user_id, suspend: !member.is_suspended })}>
-                            {member.is_suspended ? "Unsuspend" : "Suspend"}
-                          </Button>
+                          <>
+                            <Button variant="ghost" size="sm" onClick={() => toggleSuspensionMutation.mutate({ userId: member.user_id, suspend: !member.is_suspended })}>
+                              {member.is_suspended ? "Unsuspend" : "Suspend"}
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => { setPasswordTarget({ userId: member.user_id, name: member.full_name || member.email || "User" }); setNewPassword(""); setPasswordDialogOpen(true); }}>
+                              <KeyRound className="h-4 w-4" />
+                            </Button>
+                          </>
                         )}
                         <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { if (confirm("Remove this staff member's role?")) removeRoleMutation.mutate(member.id); }}>
                           <Trash2 className="h-4 w-4" />
@@ -282,6 +315,24 @@ const AdminStaff = () => {
             )}
           </CardContent>
         </Card>
+        {/* Change Password Dialog */}
+        <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Change Password</DialogTitle>
+              <DialogDescription>Set a new password for {passwordTarget?.name}</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label>New Password</Label>
+                <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Min 6 characters" />
+              </div>
+              <Button onClick={handleChangePassword} disabled={changingPassword || newPassword.length < 6} className="w-full">
+                {changingPassword ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Changing...</> : "Change Password"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
