@@ -12,6 +12,7 @@ interface SettingsMap {
   enrollment_open: boolean;
   geofence_radius_meters: number;
   theme_primary_color: string;
+  partial_payment_percentage: number;
   [key: string]: unknown;
 }
 
@@ -26,6 +27,7 @@ const defaultSettings: SettingsMap = {
   enrollment_open: true,
   geofence_radius_meters: 200,
   theme_primary_color: '#6366f1',
+  partial_payment_percentage: 50,
 };
 
 interface SettingsContextType {
