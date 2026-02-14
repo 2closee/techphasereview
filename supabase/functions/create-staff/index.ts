@@ -66,28 +66,55 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Create user via Admin API (bypasses email confirmation)
-    const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name },
-    });
+    // Check if user already exists
+    const { data: existingUsers } = await adminClient.auth.admin.listUsers();
+    const existingUser = existingUsers?.users?.find((u: any) => u.email === email);
 
-    if (createErr) {
-      return new Response(JSON.stringify({ error: createErr.message }), { status: 400, headers: corsHeaders });
+    let userId: string;
+
+    if (existingUser) {
+      userId = existingUser.id;
+
+      // Check if they already have this role
+      const { data: existingRole } = await adminClient
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("role", role)
+        .maybeSingle();
+
+      if (existingRole) {
+        return new Response(
+          JSON.stringify({ error: `This user already has the '${role}' role assigned` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else {
+      // Create new user via Admin API
+      const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name },
+      });
+
+      if (createErr) {
+        return new Response(JSON.stringify({ error: createErr.message }), { status: 400, headers: corsHeaders });
+      }
+
+      userId = newUser.user.id;
     }
 
-    // Create profile
+    // Upsert profile
     await adminClient.from("profiles").upsert({
-      id: newUser.user.id,
+      id: userId,
       email,
       full_name,
     });
 
     // Assign role
     const { error: roleErr } = await adminClient.from("user_roles").insert({
-      user_id: newUser.user.id,
+      user_id: userId,
       role,
     });
 
@@ -96,7 +123,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, user_id: newUser.user.id, message: `Staff member created with role: ${role}` }),
+      JSON.stringify({ success: true, user_id: userId, message: existingUser ? `Existing user assigned role: ${role}` : `Staff member created with role: ${role}` }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
