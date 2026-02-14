@@ -1,8 +1,9 @@
 import { useState, ReactNode } from 'react';
 import { DashboardSidebar } from './DashboardSidebar';
 import { Button } from '@/components/ui/button';
-import { Menu, Bell } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { NotificationPopover } from '@/components/notifications/NotificationPopover';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -40,10 +41,7 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
             </div>
             
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
-              </Button>
+              <NotificationPopover />
             </div>
           </div>
         </header>

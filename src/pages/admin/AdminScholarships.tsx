@@ -116,6 +116,22 @@ export default function AdminScholarships() {
         type: status === 'approved' ? 'success' : 'info',
       });
 
+      // Send email notification
+      try {
+        await supabase.functions.invoke('send-scholarship-email', {
+          body: {
+            to: selectedApp.student_registrations?.email,
+            studentName: `${selectedApp.student_registrations?.first_name} ${selectedApp.student_registrations?.last_name}`,
+            status,
+            grantedPercentage: status === 'approved' ? grantedPct : null,
+            programName: selectedApp.programs?.name || 'N/A',
+            adminNotes: reviewNotes || null,
+          },
+        });
+      } catch (emailErr) {
+        console.error('Failed to send email notification:', emailErr);
+      }
+
       toast({ title: `Application ${status}`, description: `Student has been notified.` });
       setSelectedApp(null);
       fetchApplications();

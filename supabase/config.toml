@@ -1,1 +1,4 @@
 project_id = "ijmxxysgzkfedumfpyso"
+
+[functions.send-scholarship-email]
+verify_jwt = false
