@@ -226,63 +226,27 @@ export default function CompleteEnrollment() {
     setSubmitting(true);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: registration.email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: `${registration.first_name} ${registration.last_name}`,
-          },
-        },
+      // Call edge function to create account server-side
+      const { data, error: fnError } = await supabase.functions.invoke('create-student-account', {
+        body: { registration_id: registration.id, password }
       });
 
-      if (authError) throw authError;
+      if (fnError) throw fnError;
+      if (data?.error) throw new Error(data.error);
 
-      if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
-        setError('An account with this email already exists. Please sign in instead.');
-        toast.error('Account already exists. Please sign in.');
-        setTimeout(() => navigate('/auth'), 2000);
-        return;
-      }
+      toast.success('Account created successfully!');
 
-      if (authData.user) {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: authData.user.id,
-            role: 'student',
-          });
+      // Sign in immediately
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: registration.email,
+        password,
+      });
 
-        if (roleError) {
-          console.error('Role assignment error:', roleError);
-        }
-
-        const { error: updateError } = await supabase
-          .from('student_registrations')
-          .update({
-            user_id: authData.user.id,
-            account_created: true,
-          })
-          .eq('id', registration.id);
-
-        if (updateError) {
-          console.error('Registration update error:', updateError);
-        }
-
-        toast.success('Account created successfully!');
-        
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: registration.email,
-          password,
-        });
-
-        if (signInError) {
-          toast.info('Please sign in with your new credentials');
-          navigate('/auth');
-        } else {
-          navigate('/student');
-        }
+      if (signInError) {
+        toast.info('Please sign in with your new credentials');
+        navigate('/auth');
+      } else {
+        navigate('/student');
       }
     } catch (err: any) {
       console.error('Account creation error:', err);
