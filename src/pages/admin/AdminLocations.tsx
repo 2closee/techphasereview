@@ -204,7 +204,11 @@ export default function AdminLocations() {
         .insert(payload);
 
       if (error) {
-        toast.error('Failed to create location');
+        if (error.code === '23505') {
+          toast.error('A location with this code already exists. Please use a unique code.');
+        } else {
+          toast.error('Failed to create location: ' + error.message);
+        }
       } else {
         toast.success('Location created successfully');
         setDialogOpen(false);
