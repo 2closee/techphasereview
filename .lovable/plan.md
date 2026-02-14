@@ -1,62 +1,114 @@
 
-# Fix Student Login After Registration
 
-## Problem
+# Comprehensive Fix: Student Login, Passport Photo, and Mat Number
 
-Students can't log in after registering because of two issues:
+## Issues Found
 
-1. **Email confirmation**: The account is created but requires email verification before login works. Students aren't told to check their email and get "Invalid email or password" when trying to sign in.
+### 1. Why Students Still Can't Login
 
-2. **Silent permission failures**: After account creation, the app tries to assign the student role and link the registration -- but database security policies block these operations for non-admin users. So the account is created in a broken state with no role and no link to the registration.
+Investigation revealed the root cause: both test students (`derrickblakex@gmail.com` and `beastgameshows@proton.me`) have **auth.users** entries from the old `signUp()` flow, but:
+- **No profile record** in the `profiles` table
+- **No student role** in `user_roles`
+- **Registration not linked** (`account_created` is still `false`, `user_id` is still `null`)
 
-## Solution
+The `create-student-account` edge function was deployed but has a critical bug: when it finds an existing user (created by the old flow), it **reuses their ID without updating the password**. So the student types a new password on the enrollment page, but the auth account still has the old (possibly forgotten) password. Login fails with "Invalid email or password."
 
-Replace the client-side account creation with a secure server-side Edge Function that handles everything in one step.
+Additionally, the function uses `listUsers()` which fetches ALL users -- this won't scale and is slow.
 
-### New Edge Function: `create-student-account`
+### 2. Missing Passport Photo Upload
 
-This function will:
-- Accept `registration_id`, `password` from the request
-- Verify the registration exists and hasn't already created an account
-- Create the auth user with email auto-confirmed (no email verification needed)
-- Assign the `student` role
-- Link the user to the registration record (set `user_id` and `account_created = true`)
-- Return success so the frontend can sign the student in immediately
+The `passport-photos` storage bucket exists with proper RLS policies, but the `StudentProfile.tsx` page has no upload UI.
 
-### Frontend Update: `CompleteEnrollment.tsx`
+### 3. Mat Number Not Shown on Profile
 
-- Replace the direct `supabase.auth.signUp()` call with a call to the new `create-student-account` Edge Function
-- On success, sign the student in with `signInWithPassword()` and redirect to the student dashboard
+The `matriculation_number` column exists on `student_registrations` and a `generate_matriculation_number` function exists in the database. However, the student profile page doesn't display it.
 
-### No database changes needed
+---
 
-The Edge Function uses the service role key (like `create-staff` does), so it bypasses all permission restrictions. No policy changes required.
+## Plan
+
+### Step 1: Fix the Edge Function (`create-student-account`)
+
+**File**: `supabase/functions/create-student-account/index.ts`
+
+Changes:
+- When an existing user is found, **update their password** using `adminClient.auth.admin.updateUserById()` so the new password works immediately
+- Replace `listUsers()` (which fetches all users) with `listUsers({ filter: email })` for efficient lookup
+- Add better error logging
+
+### Step 2: Fix Existing Broken Accounts (One-Time Data Fix)
+
+Run a data update to link the two existing registrations to their auth accounts, create their profiles, and assign the student role. This fixes the students who are currently stuck.
+
+### Step 3: Add Passport Photo Upload to Student Profile
+
+**File**: `src/pages/student/StudentProfile.tsx`
+
+- Add a photo upload section at the top of the profile card
+- Show current passport photo (or a placeholder) in a circular avatar
+- Upload button that saves to `passport-photos/{user_id}/passport.jpg` in Supabase Storage
+- Save the storage path in `profiles.avatar_url`
+- Generate signed URL on-the-fly for display
+
+### Step 4: Display Mat Number on Student Profile
+
+**File**: `src/pages/student/StudentProfile.tsx`
+
+- Fetch the student's `matriculation_number` from `student_registrations` (where `user_id` matches)
+- Display it prominently as "Student ID / Mat Number" in a styled badge, read-only
+
+---
 
 ## Technical Details
 
-### Edge Function: `supabase/functions/create-student-account/index.ts`
+### Edge Function Fix (Step 1)
 
 ```text
-Input: { registration_id: string, password: string }
-Steps:
-  1. Fetch registration from student_registrations (verify exists, not already created)
-  2. Check if email already exists in auth.users
-     - If yes, use existing user ID
-     - If no, create user via admin API with email_confirm: true
-  3. Insert student role into user_roles (skip if already exists)
-  4. Update student_registrations: set user_id and account_created = true
-  5. Return { success: true, email: registration.email }
+Key changes in create-student-account/index.ts:
+
+1. Replace listUsers() with targeted email lookup:
+   adminClient.auth.admin.listUsers({ filter: email, page: 1, perPage: 1 })
+
+2. When existing user found, update their password:
+   adminClient.auth.admin.updateUserById(userId, { 
+     password: password,
+     email_confirm: true 
+   })
+
+3. This ensures the password the student just typed always works.
 ```
 
-### Frontend change in `CompleteEnrollment.tsx`
+### Data Fix (Step 2)
 
-Replace lines 229-286 (the `handleCreateAccount` try block) with:
+For the two stuck registrations, the edge function will handle them on next attempt. No manual SQL needed -- students just need to revisit the enrollment page and create their account again.
+
+### Profile Photo Upload (Step 3)
+
 ```text
-1. Call create-student-account edge function with registration_id + password
-2. On success, call signInWithPassword with the email + password
-3. Navigate to /student on successful sign-in
+Upload flow:
+1. Student selects photo file (accept="image/*")
+2. Upload to Supabase Storage: passport-photos/{user_id}/passport.jpg
+3. Get public URL (bucket is public)
+4. Save URL to profiles.avatar_url
+5. Display with circular avatar component
+
+Storage path: passport-photos/{user_id}/passport.jpg
+Bucket: passport-photos (already exists, public, with RLS)
 ```
 
-### Files to change
-- **Create**: `supabase/functions/create-student-account/index.ts`
-- **Edit**: `src/pages/CompleteEnrollment.tsx` (replace signUp logic with edge function call)
+### Mat Number Display (Step 4)
+
+```text
+1. Query student_registrations where user_id = auth.uid()
+2. Display matriculation_number in a badge with IdCard icon
+3. Read-only field -- students cannot edit this
+4. Show "Pending" if not yet assigned
+```
+
+### Files to Change
+
+| File | Action |
+|------|--------|
+| `supabase/functions/create-student-account/index.ts` | Fix password update for existing users, fix listUsers scaling |
+| `src/pages/student/StudentProfile.tsx` | Add photo upload, mat number display, redesign layout |
+
