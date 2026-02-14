@@ -1,0 +1,2 @@
+UPDATE student_registrations SET payment_status = 'unpaid' WHERE id = '4566ef97-2975-4548-ae2c-74c04aec8f75';
+UPDATE student_registrations SET payment_status = 'paid', status = 'approved' WHERE id = '4566ef97-2975-4548-ae2c-74c04aec8f75';
