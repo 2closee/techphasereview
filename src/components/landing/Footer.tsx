@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import { Monitor, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const Footer = () => {
+  const { settings } = useSettings();
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
@@ -48,8 +50,7 @@ const Footer = () => {
               </div>
             </Link>
             <p className="text-secondary-foreground/70 font-body mb-6 max-w-sm">
-              Empowering Nigeria's tech workforce through practical TVET training 
-              at our centers in Port Harcourt and Warri.
+              {settings.footer_description}
             </p>
             <div className="flex items-center gap-4">
               {socialLinks.map((social, index) => (

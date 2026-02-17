@@ -29,7 +29,7 @@ const ContactSection = () => {
     {
       icon: Clock,
       title: "Office Hours",
-      details: "Mon - Fri: 8:00 AM - 5:00 PM",
+      details: settings.contact_office_hours,
     },
   ];
 

@@ -42,6 +42,8 @@ const AdminSettings = () => {
     contact_email: settings.contact_email,
     contact_phone: settings.contact_phone,
     contact_address: settings.contact_address,
+    contact_office_hours: settings.contact_office_hours,
+    footer_description: settings.footer_description,
   });
   const [paymentForm, setPaymentForm] = useState({
     partial_payment_percentage: (settings.partial_payment_percentage as number) || 50,
@@ -220,6 +222,14 @@ const AdminSettings = () => {
                 <div className="space-y-2">
                   <Label>Address</Label>
                   <Input value={contactForm.contact_address} onChange={(e) => setContactForm((p) => ({ ...p, contact_address: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Office Hours</Label>
+                  <Input value={contactForm.contact_office_hours} onChange={(e) => setContactForm((p) => ({ ...p, contact_office_hours: e.target.value }))} placeholder="Mon - Fri: 8:00 AM - 5:00 PM" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Footer Description</Label>
+                  <Textarea value={contactForm.footer_description} onChange={(e) => setContactForm((p) => ({ ...p, footer_description: e.target.value }))} rows={3} placeholder="Short description shown in the website footer" />
                 </div>
                 <Button onClick={() => saveSettings(contactForm, "Contact")} disabled={isSaving("Contact")}>
                   {isSaving("Contact") ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}

@@ -17,6 +17,8 @@ interface SettingsMap {
   bank_account_name: string;
   bank_name: string;
   payment_instructions: string;
+  footer_description: string;
+  contact_office_hours: string;
   [key: string]: unknown;
 }
 
@@ -36,6 +38,8 @@ const defaultSettings: SettingsMap = {
   bank_account_name: '',
   bank_name: '',
   payment_instructions: '',
+  footer_description: 'Empowering Nigeria\'s tech workforce through practical TVET training at our centers in Port Harcourt and Warri.',
+  contact_office_hours: 'Mon - Fri: 8:00 AM - 5:00 PM',
 };
 
 interface SettingsContextType {
