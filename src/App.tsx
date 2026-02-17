@@ -47,6 +47,7 @@ import StudentScholarship from "./pages/student/StudentScholarship";
 import StudentProfile from "./pages/student/StudentProfile";
 import AdminScholarships from "./pages/admin/AdminScholarships";
 import TermsAndConditions from "./pages/TermsAndConditions";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,6 +69,7 @@ const App = () => (
               <Route path="/register" element={<StudentRegistration />} />
               <Route path="/complete-enrollment" element={<CompleteEnrollment />} />
               <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
