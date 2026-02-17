@@ -8,10 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { Award, CheckCircle2, Clock, Loader2, XCircle, Send } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Award, CheckCircle2, Clock, Loader2, XCircle, Send, Landmark, AlertTriangle, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useSettings } from '@/contexts/SettingsContext';
 import { z } from 'zod';
 
 const scholarshipSchema = z.object({
@@ -47,10 +49,13 @@ interface ExistingApplication {
 export default function StudentScholarship() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { settings } = useSettings();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [existingApp, setExistingApp] = useState<ExistingApplication | null>(null);
-  const [registration, setRegistration] = useState<{ id: string; program_id: string } | null>(null);
+  const [registration, setRegistration] = useState<{ id: string; program_id: string; payment_status: string } | null>(null);
+  const [registrationFeeStatus, setRegistrationFeeStatus] = useState<'unpaid' | 'paid'>('unpaid');
+  const [showBankDetails, setShowBankDetails] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState<ScholarshipForm>({
@@ -72,12 +77,27 @@ export default function StudentScholarship() {
     try {
       const { data: reg } = await supabase
         .from('student_registrations')
-        .select('id, program_id')
+        .select('id, program_id, payment_status')
         .eq('user_id', user.id)
         .single();
 
       if (reg) {
         setRegistration(reg);
+
+        // Check if registration fee has been paid (any payment recorded or payment_status is not unpaid)
+        const { data: payments } = await supabase
+          .from('enrollment_payments')
+          .select('id')
+          .eq('registration_id', reg.id)
+          .eq('status', 'completed')
+          .limit(1);
+
+        if (payments && payments.length > 0) {
+          setRegistrationFeeStatus('paid');
+        } else if (reg.payment_status === 'paid' || reg.payment_status === 'partial') {
+          setRegistrationFeeStatus('paid');
+        }
+
         const { data: app } = await supabase
           .from('scholarship_applications')
           .select('id, status, requested_percentage, granted_percentage, created_at, admin_notes')
@@ -199,9 +219,129 @@ export default function StudentScholarship() {
     );
   }
 
+  // Registration fee not paid — show gate
+  if (registrationFeeStatus === 'unpaid') {
+    return (
+      <DashboardLayout title="Apply for Scholarship">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <Card className="border-orange-500/30 bg-orange-500/10">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <AlertTriangle className="w-8 h-8 text-orange-500 shrink-0 mt-1" />
+                <div>
+                  <h3 className="font-display font-bold text-foreground text-lg">Registration Fee Required</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    You must pay your base registration fee before you can apply for a scholarship. 
+                    Please make a bank transfer using the details below.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Landmark className="w-5 h-5 text-primary" />
+                Pay Registration Fee
+              </CardTitle>
+              <CardDescription>Transfer your registration fee to the account below, then contact the office to confirm.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {settings.bank_name || settings.bank_account_number ? (
+                <>
+                  <div className="bg-secondary/50 rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Bank Name</span>
+                      <span className="font-semibold text-foreground">{settings.bank_name || '—'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Account Number</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-foreground text-lg">{settings.bank_account_number || '—'}</span>
+                        {settings.bank_account_number && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => {
+                              navigator.clipboard.writeText(settings.bank_account_number);
+                              toast({ title: 'Copied!', description: 'Account number copied to clipboard.' });
+                            }}
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Account Name</span>
+                      <span className="font-semibold text-foreground">{settings.bank_account_name || '—'}</span>
+                    </div>
+                  </div>
+                  {settings.payment_instructions && (
+                    <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                      <p className="text-sm font-medium text-foreground mb-1">Payment Instructions</p>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">{settings.payment_instructions}</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Bank account details have not been configured yet. Please contact the office for payment instructions.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout title="Apply for Scholarship">
       <div className="max-w-2xl mx-auto space-y-6">
+        {/* Bank Details Dialog */}
+        <Dialog open={showBankDetails} onOpenChange={setShowBankDetails}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Landmark className="w-5 h-5 text-primary" />
+                Bank Transfer Details
+              </DialogTitle>
+              <DialogDescription>Use these details for any payment transfers</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              {settings.bank_name && (
+                <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                  <span className="text-sm text-muted-foreground">Bank</span>
+                  <span className="font-semibold text-foreground">{settings.bank_name}</span>
+                </div>
+              )}
+              {settings.bank_account_number && (
+                <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                  <span className="text-sm text-muted-foreground">Account No.</span>
+                  <span className="font-mono font-bold text-foreground">{settings.bank_account_number}</span>
+                </div>
+              )}
+              {settings.bank_account_name && (
+                <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                  <span className="text-sm text-muted-foreground">Account Name</span>
+                  <span className="font-semibold text-foreground">{settings.bank_account_name}</span>
+                </div>
+              )}
+              {settings.payment_instructions && (
+                <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                  <p className="text-sm text-muted-foreground whitespace-pre-line">{settings.payment_instructions}</p>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowBankDetails(false)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">

@@ -13,6 +13,10 @@ interface SettingsMap {
   geofence_radius_meters: number;
   theme_primary_color: string;
   partial_payment_percentage: number;
+  bank_account_number: string;
+  bank_account_name: string;
+  bank_name: string;
+  payment_instructions: string;
   [key: string]: unknown;
 }
 
@@ -28,6 +32,10 @@ const defaultSettings: SettingsMap = {
   geofence_radius_meters: 200,
   theme_primary_color: '#6366f1',
   partial_payment_percentage: 50,
+  bank_account_number: '',
+  bank_account_name: '',
+  bank_name: '',
+  payment_instructions: '',
 };
 
 interface SettingsContextType {

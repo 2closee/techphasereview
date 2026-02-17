@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useSettings } from "@/contexts/SettingsContext";
 import {
-  Building2, Type, GraduationCap, MapPin, Award, Palette, Plus, Pencil, Trash2, Save, Loader2, CreditCard,
+  Building2, Type, GraduationCap, MapPin, Award, Palette, Plus, Pencil, Trash2, Save, Loader2, CreditCard, Landmark,
 } from "lucide-react";
 
 const AdminSettings = () => {
@@ -45,6 +45,12 @@ const AdminSettings = () => {
   });
   const [paymentForm, setPaymentForm] = useState({
     partial_payment_percentage: (settings.partial_payment_percentage as number) || 50,
+  });
+  const [bankForm, setBankForm] = useState({
+    bank_account_number: (settings.bank_account_number as string) || '',
+    bank_account_name: (settings.bank_account_name as string) || '',
+    bank_name: (settings.bank_name as string) || '',
+    payment_instructions: (settings.payment_instructions as string) || '',
   });
 
   const saveSettings = async (fields: Record<string, unknown>, section: string) => {
@@ -144,6 +150,7 @@ const AdminSettings = () => {
             <TabsTrigger value="categories"><GraduationCap className="w-4 h-4 mr-2" />Categories</TabsTrigger>
             <TabsTrigger value="certifications"><Award className="w-4 h-4 mr-2" />Certifications</TabsTrigger>
             <TabsTrigger value="payment-plans"><CreditCard className="w-4 h-4 mr-2" />Payment Plans</TabsTrigger>
+            <TabsTrigger value="bank-account"><Landmark className="w-4 h-4 mr-2" />Bank Account</TabsTrigger>
           </TabsList>
 
           {/* Branding */}
@@ -431,6 +438,55 @@ const AdminSettings = () => {
                 </div>
                 <Button onClick={() => saveSettings(paymentForm, "Payment Plans")} disabled={isSaving("Payment Plans")}>
                   {isSaving("Payment Plans") ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                  Save
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Bank Account */}
+          <TabsContent value="bank-account">
+            <Card>
+              <CardHeader>
+                <CardTitle>Bank Account & Payment Instructions</CardTitle>
+                <CardDescription>Configure the bank account details shown to students for transfer payments (registration fee, tuition, etc.)</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Bank Name</Label>
+                  <Input
+                    value={bankForm.bank_name}
+                    onChange={(e) => setBankForm((p) => ({ ...p, bank_name: e.target.value }))}
+                    placeholder="e.g. First Bank of Nigeria"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Account Number</Label>
+                  <Input
+                    value={bankForm.bank_account_number}
+                    onChange={(e) => setBankForm((p) => ({ ...p, bank_account_number: e.target.value }))}
+                    placeholder="e.g. 0123456789"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Account Name</Label>
+                  <Input
+                    value={bankForm.bank_account_name}
+                    onChange={(e) => setBankForm((p) => ({ ...p, bank_account_name: e.target.value }))}
+                    placeholder="e.g. Meranos ICT Training Academy"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Payment Instructions / Narration</Label>
+                  <Textarea
+                    value={bankForm.payment_instructions}
+                    onChange={(e) => setBankForm((p) => ({ ...p, payment_instructions: e.target.value }))}
+                    placeholder="e.g. Please use your full name and program as narration when making transfer."
+                    rows={4}
+                  />
+                </div>
+                <Button onClick={() => saveSettings(bankForm, "Bank Account")} disabled={isSaving("Bank Account")}>
+                  {isSaving("Bank Account") ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                   Save
                 </Button>
               </CardContent>
