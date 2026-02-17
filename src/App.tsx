@@ -46,6 +46,7 @@ import StudentPayments from "./pages/student/StudentPayments";
 import StudentScholarship from "./pages/student/StudentScholarship";
 import StudentProfile from "./pages/student/StudentProfile";
 import AdminScholarships from "./pages/admin/AdminScholarships";
+import TermsAndConditions from "./pages/TermsAndConditions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/register" element={<StudentRegistration />} />
               <Route path="/complete-enrollment" element={<CompleteEnrollment />} />
+              <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
