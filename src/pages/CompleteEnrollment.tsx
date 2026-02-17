@@ -48,6 +48,7 @@ export default function CompleteEnrollment() {
   const [error, setError] = useState('');
   const [paymentInitializing, setPaymentInitializing] = useState(false);
   const [paymentPlan, setPaymentPlan] = useState<PaymentPlan>('full');
+  const [scholarshipFlow, setScholarshipFlow] = useState(false);
 
   useEffect(() => {
     if (registrationId) {
@@ -207,6 +208,34 @@ export default function CompleteEnrollment() {
     }
   };
 
+  const handleApplyForScholarship = async () => {
+    if (!registration) return;
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const { data, error } = await supabase.functions.invoke('get-registration-public', {
+        body: { 
+          registration_id: registration.id, 
+          update_payment_status: 'office_pending',
+          update_payment_plan: 'scholarship_pending'
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success('You can now create your account and apply for a scholarship from your dashboard.');
+      setScholarshipFlow(true);
+      setRegistration(prev => prev ? { ...prev, payment_status: 'office_pending', payment_plan: 'scholarship_pending' } : null);
+      setStep('create-account');
+    } catch (err: any) {
+      console.error('Scholarship flow error:', err);
+      setError(err.message || 'Failed to process. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -245,6 +274,9 @@ export default function CompleteEnrollment() {
       if (signInError) {
         toast.info('Please sign in with your new credentials');
         navigate('/auth');
+      } else if (scholarshipFlow) {
+        toast.info('Now apply for your scholarship from the dashboard.');
+        navigate('/student/scholarship');
       } else {
         navigate('/student');
       }
@@ -411,6 +443,28 @@ export default function CompleteEnrollment() {
                   </div>
                 </div>
 
+                {/* Apply for Scholarship button */}
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onClick={handleApplyForScholarship}
+                  disabled={paymentInitializing || submitting}
+                >
+                  {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  <GraduationCap className="w-4 h-4 mr-2" />
+                  Apply for Scholarship
+                </Button>
+
+                {/* or divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">or</span>
+                  </div>
+                </div>
+
                 {/* Pay at Office button */}
                 <Button
                   variant="outline"
@@ -423,8 +477,8 @@ export default function CompleteEnrollment() {
                   Pay at Office Instead
                 </Button>
                 <p className="text-xs text-center text-muted-foreground">
-                  Choose "Pay at Office" to create your account now and pay in person later. 
-                  Dashboard access will be limited until payment is confirmed.
+                  Apply for a scholarship (30–100% tuition discount) or pay at the office in person. 
+                  Both options let you create your account now. Dashboard access may be limited until payment is confirmed.
                 </p>
 
                 <p className="text-xs text-center text-muted-foreground">
