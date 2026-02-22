@@ -17,10 +17,9 @@ export default function AdminAuth() {
 
   useEffect(() => {
     if (!loading && user && role) {
-      if (role === 'admin') {
+      if (role === 'admin' || role === 'super_admin') {
         navigate('/admin');
       } else {
-        // Non-admin users trying to access admin portal
         toast.error('Access denied. Admin privileges required.');
         navigate('/');
       }
