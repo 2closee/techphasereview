@@ -48,10 +48,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Use setTimeout to avoid Supabase deadlock, but don't set loading false here
-          setTimeout(() => {
+          // Set loading true while we fetch the role to prevent premature redirects
+          setLoading(true);
+          // Use setTimeout to avoid Supabase deadlock
+          setTimeout(async () => {
             if (isMounted) {
-              fetchUserRole(session.user.id);
+              await fetchUserRole(session.user.id);
+              if (isMounted) setLoading(false);
             }
           }, 0);
         } else {
