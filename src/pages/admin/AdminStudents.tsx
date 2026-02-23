@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin, Download, Search } from 'lucide-react';
+import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin, Download, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { downloadCsv } from '@/utils/csvExport';
 import { BatchAssignment } from '@/components/admin/BatchAssignment';
@@ -66,6 +66,8 @@ export default function AdminStudents() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [updating, setUpdating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
   useEffect(() => {
     fetchRegistrations();
@@ -133,6 +135,18 @@ export default function AdminStudents() {
       (r.matriculation_number && r.matriculation_number.toLowerCase().includes(q))
     );
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredRegistrations.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedRegistrations = filteredRegistrations.slice(
+    (safeCurrentPage - 1) * pageSize,
+    safeCurrentPage * pageSize
+  );
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, searchQuery]);
 
   const statusCounts = registrations.reduce((acc, r) => {
     acc[r.status] = (acc[r.status] || 0) + 1;
@@ -261,8 +275,8 @@ export default function AdminStudents() {
                       <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
-                    {filteredRegistrations.map((reg) => (
+                   <tbody className="divide-y divide-border">
+                    {paginatedRegistrations.map((reg) => (
                       <tr key={reg.id} className="hover:bg-secondary/30">
                         <td className="px-4 py-3">
                           <p className="font-medium text-foreground">{reg.first_name} {reg.last_name}</p>
@@ -322,6 +336,54 @@ export default function AdminStudents() {
                   </tbody>
                 </table>
               </div>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+                  <p className="text-sm text-muted-foreground">
+                    Showing {(safeCurrentPage - 1) * pageSize + 1}–{Math.min(safeCurrentPage * pageSize, filteredRegistrations.length)} of {filteredRegistrations.length}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={safeCurrentPage <= 1}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(p => p === 1 || p === totalPages || Math.abs(p - safeCurrentPage) <= 1)
+                      .reduce<(number | 'ellipsis')[]>((acc, p, i, arr) => {
+                        if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('ellipsis');
+                        acc.push(p);
+                        return acc;
+                      }, [])
+                      .map((item, i) =>
+                        item === 'ellipsis' ? (
+                          <span key={`e${i}`} className="px-2 text-muted-foreground">…</span>
+                        ) : (
+                          <Button
+                            key={item}
+                            variant={item === safeCurrentPage ? 'default' : 'outline'}
+                            size="sm"
+                            className="min-w-[32px]"
+                            onClick={() => setCurrentPage(item)}
+                          >
+                            {item}
+                          </Button>
+                        )
+                      )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={safeCurrentPage >= totalPages}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
