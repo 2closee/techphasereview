@@ -1,54 +1,61 @@
 
 
-# Fix: Token Refresh Storm Causing All Users to Get Kicked Out
+# CSV Export and Manual Batch/Course Assignment for Super Admin
 
-## Root Cause
+## Feature 1: CSV Export of Student Applications
 
-The auth logs show **dozens of token refresh events per second**, with Supabase returning **429 rate limit errors**. Here is what is happening:
+Add a "Download CSV" button to the `AdminStudents.tsx` page that exports the currently filtered student registration data.
 
-1. Supabase automatically refreshes auth tokens periodically
-2. Each token refresh fires `onAuthStateChange` with a `TOKEN_REFRESHED` event
-3. The current code responds by setting `loading = true` and re-fetching the role from the database
-4. Setting `loading = true` causes `ProtectedRoute` to unmount the dashboard and show a spinner
-5. When the dashboard re-mounts, it can trigger more auth state changes, creating a cascade
-6. Eventually Supabase hits a 429 rate limit, auth calls fail, and the user gets kicked out
+### How it works
+- A new "Download CSV" button will appear next to the status filter dropdown
+- It exports the currently visible (filtered) registrations
+- The CSV will include: Name, Email, Phone, Gender, Date of Birth, Address, City, State, Program, Location, Education Level, Previous Experience, Emergency Contact, Status, Payment Status, Matriculation Number, Applied Date
+- Pure client-side implementation -- no edge function needed
 
-## The Fix
+### Changes
+- **`src/pages/admin/AdminStudents.tsx`**: Add a `Download` icon import, a `downloadCSV` helper function that converts the `filteredRegistrations` array to CSV text and triggers a browser download, and a Button in the filters bar
 
-Separate **initial auth loading** from **ongoing auth state changes**. The role should only be re-fetched when the user actually changes (sign in/sign out), not on every token refresh.
+---
 
-### Changes to `src/hooks/useAuth.tsx`
+## Feature 2: Manual Student-to-Batch Assignment
 
-1. Add a separate `initialLoading` flag that only controls the first load
-2. In `onAuthStateChange`: 
-   - Do NOT set `loading = true` on `TOKEN_REFRESHED` events
-   - Only re-fetch the role when the user ID actually changes (sign in / sign out)
-   - Cache the current user ID to detect real user changes vs token refreshes
-3. In `initializeAuth`: keep existing behavior (await role fetch, then set loading false)
+Add the ability to manually assign a student to a specific program, location, and batch from the student detail dialog in `AdminStudents.tsx`.
 
-### Changes to `src/components/ProtectedRoute.tsx`
+### How it works
+- In the student detail dialog, a new "Assign to Batch" section appears for students who are approved or enrolled but not yet assigned to a batch
+- The admin selects a Program, Location, and then an available Batch (filtered by program + location)
+- On confirmation, the student's `program_id`, `preferred_location_id`, and `batch_id` are updated, and the batch's `current_count` is incremented
+- Students already assigned to a batch will show their current assignment with an option to reassign
 
-No changes needed -- it already correctly checks `loading` before rendering.
+### Changes
+- **`src/pages/admin/AdminStudents.tsx`**:
+  - Expand the `Registration` type to include `batch_id`, `preferred_location_id`, and related fields
+  - Add state for programs list, locations list, and batches list (fetched on dialog open)
+  - Add an "Assign to Batch" section in the detail dialog with three Select dropdowns (Program, Location, Batch)
+  - Add an `assignToBatch` function that updates `student_registrations` and increments the batch count
+  - No database migration needed -- all required columns (`batch_id`, `program_id`, `preferred_location_id`) already exist on `student_registrations`
 
-## Technical Details
+### Technical Details
 
+**CSV Export function outline:**
 ```text
-BEFORE (broken):
-  Token refresh -> onAuthStateChange -> loading=true -> unmount dashboard
-  -> role fetch -> loading=false -> remount dashboard -> possible cascade
-
-AFTER (fixed):
-  Token refresh -> onAuthStateChange -> user ID unchanged -> skip role fetch
-  Sign in       -> onAuthStateChange -> user ID changed -> fetch role (no loading flash)
-  Initial load  -> loading=true until role fetched -> loading=false -> render dashboard
+1. Map filteredRegistrations to flat row objects
+2. Generate CSV header from column keys
+3. Join rows with commas, escaping values containing commas/quotes
+4. Create a Blob, generate object URL, trigger download via hidden anchor
 ```
 
-Key implementation points:
-- Track `currentUserId` via a ref to detect actual user changes
-- On `TOKEN_REFRESHED` or `INITIAL_SESSION` events where user ID hasn't changed, do nothing
-- On `SIGNED_IN` with a new user ID, fetch role without setting `loading = true` (the initial load already handles the first render)
-- On `SIGNED_OUT`, clear role and user immediately
+**Batch assignment flow:**
+```text
+1. Admin opens student detail dialog
+2. Admin clicks "Assign to Batch" (or sees current assignment)
+3. Selects Program -> fetches locations offering that program
+4. Selects Location -> fetches open/full batches for that program+location
+5. Selects Batch -> clicks "Assign"
+6. System updates student_registrations.batch_id, program_id, preferred_location_id
+7. System increments course_batches.current_count
+8. If count reaches max, batch status auto-updates to 'full'
+```
 
-### File to modify
-- `src/hooks/useAuth.tsx` -- refactor onAuthStateChange to avoid re-fetching on token refreshes
+No new database tables or migrations are required. All operations use existing columns and RLS policies that already grant admin/super_admin full access.
 
