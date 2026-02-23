@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin, Download } from 'lucide-react';
+import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin, Download, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { downloadCsv } from '@/utils/csvExport';
 import { BatchAssignment } from '@/components/admin/BatchAssignment';
@@ -65,6 +65,7 @@ export default function AdminStudents() {
   const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [updating, setUpdating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchRegistrations();
@@ -121,9 +122,17 @@ export default function AdminStudents() {
     setUpdating(false);
   };
 
-  const filteredRegistrations = filterStatus === 'all'
-    ? registrations
-    : registrations.filter(r => r.status === filterStatus);
+  const filteredRegistrations = registrations.filter(r => {
+    const matchesStatus = filterStatus === 'all' || r.status === filterStatus;
+    if (!matchesStatus) return false;
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      `${r.first_name} ${r.last_name}`.toLowerCase().includes(q) ||
+      r.email.toLowerCase().includes(q) ||
+      (r.matriculation_number && r.matriculation_number.toLowerCase().includes(q))
+    );
+  });
 
   const statusCounts = registrations.reduce((acc, r) => {
     acc[r.status] = (acc[r.status] || 0) + 1;
@@ -195,6 +204,16 @@ export default function AdminStudents() {
 
         {/* Filters */}
         <div className="flex items-center gap-4 flex-wrap">
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search by name, email or matric no..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 rounded-md border border-input bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Filter by status" />
