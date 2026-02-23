@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useState, useEffect, useRef, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -20,7 +20,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole>(null);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  const currentUserIdRef = useRef<string | null>(null);
+  const isMountedRef = useRef(true);
 
   const fetchUserRole = async (userId: string) => {
     const { data, error } = await supabase
@@ -30,37 +33,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .order('role', { ascending: true })
       .limit(1);
     
-    if (data && data.length > 0 && !error) {
-      setRole(data[0].role as AppRole);
-    } else {
-      setRole(null);
+    if (isMountedRef.current) {
+      if (data && data.length > 0 && !error) {
+        setRole(data[0].role as AppRole);
+      } else {
+        setRole(null);
+      }
     }
   };
 
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (!isMounted) return;
+        if (!isMountedRef.current) return;
+
+        const newUserId = session?.user?.id ?? null;
+
+        // Always update session and user
         setSession(session);
         setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Set loading true while we fetch the role to prevent premature redirects
-          setLoading(true);
-          // Use setTimeout to avoid Supabase deadlock
-          setTimeout(async () => {
-            if (isMounted) {
-              await fetchUserRole(session.user.id);
-              if (isMounted) setLoading(false);
-            }
-          }, 0);
-        } else {
+
+        if (event === 'SIGNED_OUT') {
+          currentUserIdRef.current = null;
           setRole(null);
-          setLoading(false);
+          return;
         }
+
+        // Only fetch role if the user ID actually changed (new sign-in)
+        if (newUserId && newUserId !== currentUserIdRef.current) {
+          currentUserIdRef.current = newUserId;
+          // Fetch role in background — don't set loading to true
+          // The initial load handles the first render's loading state
+          fetchUserRole(newUserId);
+        }
+        // For TOKEN_REFRESHED with same user ID: do nothing — skip role re-fetch
       }
     );
 
@@ -68,23 +77,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!isMounted) return;
+        if (!isMountedRef.current) return;
 
         setSession(session);
         setUser(session?.user ?? null);
+        currentUserIdRef.current = session?.user?.id ?? null;
 
         if (session?.user) {
           await fetchUserRole(session.user.id);
         }
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMountedRef.current) setInitialLoading(false);
       }
     };
 
     initializeAuth();
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -121,10 +131,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setRole(null);
+    currentUserIdRef.current = null;
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, role, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, role, loading: initialLoading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
