@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin } from 'lucide-react';
+import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin, Download } from 'lucide-react';
 import { format } from 'date-fns';
+import { downloadCsv } from '@/utils/csvExport';
+import { BatchAssignment } from '@/components/admin/BatchAssignment';
 
 type Registration = {
   id: string;
@@ -31,6 +33,8 @@ type Registration = {
   created_at: string;
   matriculation_number: string | null;
   payment_status: string;
+  batch_id: string | null;
+  preferred_location_id: string | null;
   programs: {
     name: string;
     category: string;
@@ -38,6 +42,12 @@ type Registration = {
   training_locations: {
     name: string;
     city: string;
+  } | null;
+  course_batches: {
+    batch_number: number;
+    current_count: number;
+    max_students: number;
+    status: string;
   } | null;
 };
 
@@ -73,6 +83,12 @@ export default function AdminStudents() {
         training_locations:preferred_location_id (
           name,
           city
+        ),
+        course_batches:batch_id (
+          batch_number,
+          current_count,
+          max_students,
+          status
         )
       `)
       .order('created_at', { ascending: false });
@@ -114,6 +130,32 @@ export default function AdminStudents() {
     return acc;
   }, {} as Record<string, number>);
 
+  const handleDownloadCsv = () => {
+    const headers = ['Name', 'Email', 'Phone', 'Gender', 'Date of Birth', 'Address', 'City', 'State', 'Program', 'Location', 'Education Level', 'Previous Experience', 'Emergency Contact', 'Emergency Phone', 'Status', 'Payment Status', 'Matriculation Number', 'Applied Date'];
+    const rows = filteredRegistrations.map(r => [
+      `${r.first_name} ${r.last_name}`,
+      r.email,
+      r.phone,
+      r.gender || '',
+      r.date_of_birth || '',
+      r.address || '',
+      r.city || '',
+      r.state || '',
+      r.programs?.name || '',
+      r.training_locations ? `${r.training_locations.name} (${r.training_locations.city})` : '',
+      r.education_level || '',
+      r.previous_experience || '',
+      r.emergency_contact_name || '',
+      r.emergency_contact_phone || '',
+      r.status,
+      r.payment_status,
+      r.matriculation_number || '',
+      format(new Date(r.created_at), 'yyyy-MM-dd'),
+    ]);
+    downloadCsv(`student-applications-${format(new Date(), 'yyyy-MM-dd')}.csv`, headers, rows);
+    toast.success(`Exported ${rows.length} records`);
+  };
+
   return (
     <DashboardLayout title="Student Registrations">
       <div className="space-y-6">
@@ -152,7 +194,7 @@ export default function AdminStudents() {
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Filter by status" />
@@ -166,6 +208,10 @@ export default function AdminStudents() {
               <SelectItem value="rejected">Rejected</SelectItem>
             </SelectContent>
           </Select>
+          <Button variant="outline" onClick={handleDownloadCsv} disabled={filteredRegistrations.length === 0}>
+            <Download className="w-4 h-4 mr-2" />
+            Download CSV ({filteredRegistrations.length})
+          </Button>
         </div>
 
         {/* Registrations List */}
@@ -401,6 +447,29 @@ export default function AdminStudents() {
                           Reject
                         </Button>
                       )}
+                    </div>
+                  )}
+
+                  {/* Batch Assignment */}
+                  {(selectedRegistration.status === 'approved' || selectedRegistration.status === 'enrolled') && (
+                    <BatchAssignment
+                      studentId={selectedRegistration.id}
+                      currentBatchId={selectedRegistration.batch_id}
+                      currentProgramId={selectedRegistration.program_id}
+                      currentLocationId={selectedRegistration.preferred_location_id}
+                      onAssigned={() => {
+                        fetchRegistrations();
+                        setSelectedRegistration(null);
+                      }}
+                    />
+                  )}
+
+                  {selectedRegistration.course_batches && (
+                    <div className="p-3 bg-primary/5 rounded-lg">
+                      <p className="text-sm text-muted-foreground">Current Batch Assignment</p>
+                      <p className="font-medium">
+                        Batch {selectedRegistration.course_batches.batch_number} — {selectedRegistration.course_batches.current_count}/{selectedRegistration.course_batches.max_students} students ({selectedRegistration.course_batches.status})
+                      </p>
                     </div>
                   )}
                 </div>
