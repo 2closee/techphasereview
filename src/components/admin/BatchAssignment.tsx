@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Package } from 'lucide-react';
+import { Loader2, Package, Plus } from 'lucide-react';
 
 type Program = { id: string; name: string; category: string };
 type Location = { id: string; name: string; city: string };
@@ -25,6 +25,7 @@ export function BatchAssignment({ studentId, currentBatchId, currentProgramId, c
   const [selectedLocation, setSelectedLocation] = useState(currentLocationId || '');
   const [selectedBatch, setSelectedBatch] = useState(currentBatchId || '');
   const [assigning, setAssigning] = useState(false);
+  const [creatingBatch, setCreatingBatch] = useState(false);
   const [loadingLocations, setLoadingLocations] = useState(false);
   const [loadingBatches, setLoadingBatches] = useState(false);
 
@@ -50,31 +51,55 @@ export function BatchAssignment({ studentId, currentBatchId, currentProgramId, c
       });
   }, [selectedProgram]);
 
-  useEffect(() => {
+  const fetchBatches = async () => {
     if (!selectedProgram || !selectedLocation) { setBatches([]); setSelectedBatch(''); return; }
     setLoadingBatches(true);
     setSelectedBatch('');
-    supabase.from('course_batches')
+    const { data } = await supabase.from('course_batches')
       .select('id, batch_number, current_count, max_students, status')
       .eq('program_id', selectedProgram)
       .eq('location_id', selectedLocation)
-      .order('batch_number', { ascending: true })
-      .then(({ data }) => {
-        setBatches(data || []);
-        setLoadingBatches(false);
-      });
+      .order('batch_number', { ascending: true });
+    setBatches(data || []);
+    setLoadingBatches(false);
+  };
+
+  useEffect(() => {
+    fetchBatches();
   }, [selectedProgram, selectedLocation]);
+
+  const handleCreateBatch = async () => {
+    if (!selectedProgram || !selectedLocation) return;
+    setCreatingBatch(true);
+    const maxNum = batches.length > 0 ? Math.max(...batches.map(b => b.batch_number)) : 0;
+    const { data, error } = await supabase.from('course_batches')
+      .insert({
+        program_id: selectedProgram,
+        location_id: selectedLocation,
+        batch_number: maxNum + 1,
+        max_students: 15,
+        status: 'open',
+        current_count: 0,
+      })
+      .select('id, batch_number, current_count, max_students, status')
+      .single();
+
+    if (error) {
+      toast.error('Failed to create batch');
+    } else if (data) {
+      setBatches(prev => [...prev, data]);
+      setSelectedBatch(data.id);
+      toast.success(`Batch ${data.batch_number} created`);
+    }
+    setCreatingBatch(false);
+  };
 
   const handleAssign = async () => {
     if (!selectedBatch || !selectedProgram || !selectedLocation) return;
     setAssigning(true);
 
-    // If student was previously in a different batch, decrement old batch count
+    // Decrement old batch count
     if (currentBatchId && currentBatchId !== selectedBatch) {
-      await supabase.from('course_batches')
-        .update({ current_count: Math.max(0, 0) }) // We'll use RPC-style
-        .eq('id', currentBatchId);
-      // Actually decrement properly
       const { data: oldBatch } = await supabase.from('course_batches').select('current_count').eq('id', currentBatchId).single();
       if (oldBatch) {
         await supabase.from('course_batches').update({ current_count: Math.max(0, oldBatch.current_count - 1) }).eq('id', currentBatchId);
@@ -111,6 +136,9 @@ export function BatchAssignment({ studentId, currentBatchId, currentProgramId, c
     setAssigning(false);
     onAssigned();
   };
+
+  const showCreateButton = selectedProgram && selectedLocation && !loadingBatches && 
+    (batches.length === 0 || batches.every(b => b.status === 'full'));
 
   return (
     <div className="p-4 border rounded-lg space-y-4 bg-secondary/30">
@@ -163,6 +191,18 @@ export function BatchAssignment({ studentId, currentBatchId, currentProgramId, c
               )}
             </SelectContent>
           </Select>
+          {showCreateButton && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2 w-full"
+              onClick={handleCreateBatch}
+              disabled={creatingBatch}
+            >
+              {creatingBatch ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+              Create New Batch
+            </Button>
+          )}
         </div>
       </div>
 

@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin, Download, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin, Download, Search, ChevronLeft, ChevronRight, Package, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { downloadCsv } from '@/utils/csvExport';
 import { BatchAssignment } from '@/components/admin/BatchAssignment';
@@ -51,6 +52,10 @@ type Registration = {
   } | null;
 };
 
+type BulkProgram = { id: string; name: string; category: string };
+type BulkLocation = { id: string; name: string; city: string };
+type BulkBatch = { id: string; batch_number: number; current_count: number; max_students: number; status: string };
+
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
   reviewing: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
@@ -68,6 +73,22 @@ export default function AdminStudents() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
+
+  // Bulk selection state
+  const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkAssigning, setBulkAssigning] = useState(false);
+
+  // Bulk dialog cascading selects
+  const [bulkPrograms, setBulkPrograms] = useState<BulkProgram[]>([]);
+  const [bulkLocations, setBulkLocations] = useState<BulkLocation[]>([]);
+  const [bulkBatches, setBulkBatches] = useState<BulkBatch[]>([]);
+  const [bulkSelectedProgram, setBulkSelectedProgram] = useState('');
+  const [bulkSelectedLocation, setBulkSelectedLocation] = useState('');
+  const [bulkSelectedBatch, setBulkSelectedBatch] = useState('');
+  const [bulkLoadingLocations, setBulkLoadingLocations] = useState(false);
+  const [bulkLoadingBatches, setBulkLoadingBatches] = useState(false);
+  const [bulkCreatingBatch, setBulkCreatingBatch] = useState(false);
 
   useEffect(() => {
     fetchRegistrations();
@@ -143,9 +164,9 @@ export default function AdminStudents() {
     safeCurrentPage * pageSize
   );
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
+    setSelectedStudents(new Set());
   }, [filterStatus, searchQuery]);
 
   const statusCounts = registrations.reduce((acc, r) => {
@@ -178,6 +199,160 @@ export default function AdminStudents() {
     downloadCsv(`student-applications-${format(new Date(), 'yyyy-MM-dd')}.csv`, headers, rows);
     toast.success(`Exported ${rows.length} records`);
   };
+
+  // --- Checkbox logic ---
+  const toggleStudent = (id: string) => {
+    setSelectedStudents(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllOnPage = () => {
+    const pageIds = paginatedRegistrations.map(r => r.id);
+    const allSelected = pageIds.every(id => selectedStudents.has(id));
+    setSelectedStudents(prev => {
+      const next = new Set(prev);
+      if (allSelected) {
+        pageIds.forEach(id => next.delete(id));
+      } else {
+        pageIds.forEach(id => next.add(id));
+      }
+      return next;
+    });
+  };
+
+  const allOnPageSelected = paginatedRegistrations.length > 0 && paginatedRegistrations.every(r => selectedStudents.has(r.id));
+
+  // --- Bulk dialog logic ---
+  const openBulkDialog = () => {
+    setBulkDialogOpen(true);
+    setBulkSelectedProgram('');
+    setBulkSelectedLocation('');
+    setBulkSelectedBatch('');
+    setBulkLocations([]);
+    setBulkBatches([]);
+    supabase.from('programs').select('id, name, category').eq('is_active', true).order('name')
+      .then(({ data }) => setBulkPrograms(data || []));
+  };
+
+  useEffect(() => {
+    if (!bulkSelectedProgram) { setBulkLocations([]); setBulkSelectedLocation(''); setBulkBatches([]); setBulkSelectedBatch(''); return; }
+    setBulkLoadingLocations(true);
+    setBulkSelectedLocation('');
+    setBulkBatches([]);
+    setBulkSelectedBatch('');
+    supabase.from('location_programs').select('location_id, training_locations(id, name, city)')
+      .eq('program_id', bulkSelectedProgram).eq('is_active', true)
+      .then(({ data }) => {
+        const locs = (data || []).map((lp: any) => lp.training_locations).filter(Boolean) as BulkLocation[];
+        setBulkLocations(locs);
+        setBulkLoadingLocations(false);
+      });
+  }, [bulkSelectedProgram]);
+
+  const fetchBulkBatches = async () => {
+    if (!bulkSelectedProgram || !bulkSelectedLocation) { setBulkBatches([]); setBulkSelectedBatch(''); return; }
+    setBulkLoadingBatches(true);
+    setBulkSelectedBatch('');
+    const { data } = await supabase.from('course_batches')
+      .select('id, batch_number, current_count, max_students, status')
+      .eq('program_id', bulkSelectedProgram)
+      .eq('location_id', bulkSelectedLocation)
+      .order('batch_number', { ascending: true });
+    setBulkBatches(data || []);
+    setBulkLoadingBatches(false);
+  };
+
+  useEffect(() => {
+    fetchBulkBatches();
+  }, [bulkSelectedProgram, bulkSelectedLocation]);
+
+  const handleBulkCreateBatch = async () => {
+    if (!bulkSelectedProgram || !bulkSelectedLocation) return;
+    setBulkCreatingBatch(true);
+    const maxNum = bulkBatches.length > 0 ? Math.max(...bulkBatches.map(b => b.batch_number)) : 0;
+    const { data, error } = await supabase.from('course_batches')
+      .insert({
+        program_id: bulkSelectedProgram,
+        location_id: bulkSelectedLocation,
+        batch_number: maxNum + 1,
+        max_students: 15,
+        status: 'open',
+        current_count: 0,
+      })
+      .select('id, batch_number, current_count, max_students, status')
+      .single();
+    if (error) {
+      toast.error('Failed to create batch');
+    } else if (data) {
+      setBulkBatches(prev => [...prev, data]);
+      setBulkSelectedBatch(data.id);
+      toast.success(`Batch ${data.batch_number} created`);
+    }
+    setBulkCreatingBatch(false);
+  };
+
+  const handleBulkAssign = async () => {
+    if (!bulkSelectedBatch || !bulkSelectedProgram || !bulkSelectedLocation) return;
+    setBulkAssigning(true);
+
+    const selectedRegs = registrations.filter(r => selectedStudents.has(r.id));
+    const eligible = selectedRegs.filter(r => r.status === 'approved' || r.status === 'enrolled');
+    const skipped = selectedRegs.length - eligible.length;
+
+    // Decrement old batch counts
+    const oldBatchIds = new Set(eligible.filter(r => r.batch_id && r.batch_id !== bulkSelectedBatch).map(r => r.batch_id!));
+    for (const oldId of oldBatchIds) {
+      const countToRemove = eligible.filter(r => r.batch_id === oldId).length;
+      const { data: oldBatch } = await supabase.from('course_batches').select('current_count').eq('id', oldId).single();
+      if (oldBatch) {
+        await supabase.from('course_batches').update({ current_count: Math.max(0, oldBatch.current_count - countToRemove) }).eq('id', oldId);
+      }
+    }
+
+    // Update all eligible students
+    const eligibleIds = eligible.map(r => r.id);
+    if (eligibleIds.length > 0) {
+      const { error } = await supabase.from('student_registrations')
+        .update({
+          batch_id: bulkSelectedBatch,
+          program_id: bulkSelectedProgram,
+          preferred_location_id: bulkSelectedLocation,
+        })
+        .in('id', eligibleIds);
+
+      if (error) {
+        toast.error('Failed to assign students');
+        setBulkAssigning(false);
+        return;
+      }
+
+      // Increment new batch count
+      const newlyAssigned = eligible.filter(r => r.batch_id !== bulkSelectedBatch).length;
+      if (newlyAssigned > 0) {
+        const { data: newBatch } = await supabase.from('course_batches').select('current_count, max_students').eq('id', bulkSelectedBatch).single();
+        if (newBatch) {
+          const newCount = newBatch.current_count + newlyAssigned;
+          await supabase.from('course_batches').update({
+            current_count: newCount,
+            status: newCount >= newBatch.max_students ? 'full' : 'open',
+          }).eq('id', bulkSelectedBatch);
+        }
+      }
+    }
+
+    const msg = `${eligible.length} student(s) assigned${skipped > 0 ? `, ${skipped} skipped (not approved/enrolled)` : ''}`;
+    toast.success(msg);
+    setBulkAssigning(false);
+    setBulkDialogOpen(false);
+    setSelectedStudents(new Set());
+    fetchRegistrations();
+  };
+
+  const showBulkCreateButton = bulkSelectedProgram && bulkSelectedLocation && !bulkLoadingBatches &&
+    (bulkBatches.length === 0 || bulkBatches.every(b => b.status === 'full'));
 
   return (
     <DashboardLayout title="Student Registrations">
@@ -247,6 +422,20 @@ export default function AdminStudents() {
           </Button>
         </div>
 
+        {/* Bulk Action Bar */}
+        {selectedStudents.size > 0 && (
+          <div className="flex items-center gap-4 p-3 rounded-lg bg-primary/10 border border-primary/20">
+            <span className="text-sm font-medium">{selectedStudents.size} student(s) selected</span>
+            <Button size="sm" onClick={openBulkDialog}>
+              <Package className="w-4 h-4 mr-2" />
+              Bulk Assign to Batch
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelectedStudents(new Set())}>
+              Clear Selection
+            </Button>
+          </div>
+        )}
+
         {/* Registrations List */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -267,6 +456,13 @@ export default function AdminStudents() {
                 <table className="w-full">
                   <thead className="bg-secondary/50">
                     <tr>
+                      <th className="px-4 py-3 w-10">
+                        <Checkbox
+                          checked={allOnPageSelected}
+                          onCheckedChange={toggleAllOnPage}
+                          aria-label="Select all on page"
+                        />
+                      </th>
                       <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Name</th>
                       <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Contact</th>
                       <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Program</th>
@@ -278,6 +474,13 @@ export default function AdminStudents() {
                    <tbody className="divide-y divide-border">
                     {paginatedRegistrations.map((reg) => (
                       <tr key={reg.id} className="hover:bg-secondary/30">
+                        <td className="px-4 py-3">
+                          <Checkbox
+                            checked={selectedStudents.has(reg.id)}
+                            onCheckedChange={() => toggleStudent(reg.id)}
+                            aria-label={`Select ${reg.first_name} ${reg.last_name}`}
+                          />
+                        </td>
                         <td className="px-4 py-3">
                           <p className="font-medium text-foreground">{reg.first_name} {reg.last_name}</p>
                           {reg.matriculation_number && (
@@ -556,6 +759,81 @@ export default function AdminStudents() {
                 </div>
               </>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Bulk Assignment Dialog */}
+        <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Bulk Assign to Batch</DialogTitle>
+              <DialogDescription>
+                Assign {selectedStudents.size} selected student(s) to a batch. Only approved/enrolled students will be assigned.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Program</label>
+                <Select value={bulkSelectedProgram} onValueChange={setBulkSelectedProgram}>
+                  <SelectTrigger><SelectValue placeholder="Select program" /></SelectTrigger>
+                  <SelectContent>
+                    {bulkPrograms.map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Location</label>
+                <Select value={bulkSelectedLocation} onValueChange={setBulkSelectedLocation} disabled={!bulkSelectedProgram || bulkLoadingLocations}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={bulkLoadingLocations ? 'Loading...' : 'Select location'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {bulkLocations.map(l => (
+                      <SelectItem key={l.id} value={l.id}>{l.name} ({l.city})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Batch</label>
+                <Select value={bulkSelectedBatch} onValueChange={setBulkSelectedBatch} disabled={!bulkSelectedLocation || bulkLoadingBatches}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={bulkLoadingBatches ? 'Loading...' : 'Select batch'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {bulkBatches.map(b => (
+                      <SelectItem key={b.id} value={b.id}>
+                        Batch {b.batch_number} ({b.current_count}/{b.max_students}) - {b.status}
+                      </SelectItem>
+                    ))}
+                    {bulkBatches.length === 0 && !bulkLoadingBatches && bulkSelectedLocation && (
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">No batches available</div>
+                    )}
+                  </SelectContent>
+                </Select>
+                {showBulkCreateButton && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full"
+                    onClick={handleBulkCreateBatch}
+                    disabled={bulkCreatingBatch}
+                  >
+                    {bulkCreatingBatch ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+                    Create New Batch
+                  </Button>
+                )}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setBulkDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleBulkAssign} disabled={!bulkSelectedBatch || bulkAssigning}>
+                {bulkAssigning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Package className="w-4 h-4 mr-2" />}
+                Assign {selectedStudents.size} Student(s)
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
