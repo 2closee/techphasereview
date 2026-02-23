@@ -1,61 +1,76 @@
 
 
-# CSV Export and Manual Batch/Course Assignment for Super Admin
+# Auto-Create Batches and Bulk Batch Assignment
 
-## Feature 1: CSV Export of Student Applications
+## Problem Summary
 
-Add a "Download CSV" button to the `AdminStudents.tsx` page that exports the currently filtered student registration data.
+1. **No batches exist** for some program+location combinations, so the batch assignment dropdown shows "No batches available" and the admin is stuck.
+2. There is no way to **assign batches in bulk** to multiple students at once -- the admin must open each student's detail dialog individually.
 
-### How it works
-- A new "Download CSV" button will appear next to the status filter dropdown
-- It exports the currently visible (filtered) registrations
-- The CSV will include: Name, Email, Phone, Gender, Date of Birth, Address, City, State, Program, Location, Education Level, Previous Experience, Emergency Contact, Status, Payment Status, Matriculation Number, Applied Date
-- Pure client-side implementation -- no edge function needed
+## Solution
 
-### Changes
-- **`src/pages/admin/AdminStudents.tsx`**: Add a `Download` icon import, a `downloadCSV` helper function that converts the `filteredRegistrations` array to CSV text and triggers a browser download, and a Button in the filters bar
+### 1. Auto-Create Batch in BatchAssignment Component
+
+When the admin selects a Program and Location but no batches exist, the system will automatically offer to create one. A "Create New Batch" button will appear in the batch dropdown area, which creates a new batch (batch_number = next sequential number) for that program+location pair and selects it.
+
+### 2. Bulk Batch Assignment
+
+Add a **checkbox selection system** to the student registrations table so the admin can select multiple students, then assign them all to a batch in one action.
+
+- Each row in the table gets a checkbox
+- A "Select All (on page)" checkbox appears in the table header
+- When students are selected, a floating action bar appears with a "Bulk Assign to Batch" button
+- Clicking it opens a dialog with Program, Location, and Batch dropdowns (with auto-create support)
+- On confirm, all selected students are updated and batch counts are adjusted
 
 ---
 
-## Feature 2: Manual Student-to-Batch Assignment
+## Changes
 
-Add the ability to manually assign a student to a specific program, location, and batch from the student detail dialog in `AdminStudents.tsx`.
+### File: `src/components/admin/BatchAssignment.tsx`
 
-### How it works
-- In the student detail dialog, a new "Assign to Batch" section appears for students who are approved or enrolled but not yet assigned to a batch
-- The admin selects a Program, Location, and then an available Batch (filtered by program + location)
-- On confirmation, the student's `program_id`, `preferred_location_id`, and `batch_id` are updated, and the batch's `current_count` is incremented
-- Students already assigned to a batch will show their current assignment with an option to reassign
+- Add a "Create New Batch" button that appears when no batches exist for the selected program+location
+- The button creates a new `course_batches` row with `batch_number` = max existing + 1 (or 1 if none exist), `max_students` = 15, `status` = 'open'
+- After creation, auto-select the new batch
 
-### Changes
-- **`src/pages/admin/AdminStudents.tsx`**:
-  - Expand the `Registration` type to include `batch_id`, `preferred_location_id`, and related fields
-  - Add state for programs list, locations list, and batches list (fetched on dialog open)
-  - Add an "Assign to Batch" section in the detail dialog with three Select dropdowns (Program, Location, Batch)
-  - Add an `assignToBatch` function that updates `student_registrations` and increments the batch count
-  - No database migration needed -- all required columns (`batch_id`, `program_id`, `preferred_location_id`) already exist on `student_registrations`
+### File: `src/pages/admin/AdminStudents.tsx`
 
-### Technical Details
+- Add `selectedStudents` state (Set of registration IDs) for checkbox tracking
+- Add checkboxes to each table row and a "select all on page" checkbox in the header
+- Add a bulk action bar that appears when students are selected, showing count and a "Bulk Assign to Batch" button
+- Add a bulk assignment dialog containing Program/Location/Batch selects (reusing the same cascading logic from BatchAssignment) with auto-create batch support
+- The bulk assign function loops through selected students, updates their `batch_id`, `program_id`, and `preferred_location_id`, and increments batch `current_count` accordingly
+- Only students with status "approved" or "enrolled" can be bulk-assigned (others are skipped with a warning)
 
-**CSV Export function outline:**
+---
+
+## Technical Details
+
+**Auto-create batch logic (in BatchAssignment and bulk dialog):**
+
 ```text
-1. Map filteredRegistrations to flat row objects
-2. Generate CSV header from column keys
-3. Join rows with commas, escaping values containing commas/quotes
-4. Create a Blob, generate object URL, trigger download via hidden anchor
+1. Admin selects Program + Location
+2. Query: SELECT MAX(batch_number) FROM course_batches WHERE program_id = X AND location_id = Y
+3. If no batches or all full -> show "Create New Batch" button
+4. On click: INSERT INTO course_batches (program_id, location_id, batch_number, max_students, status)
+   VALUES (X, Y, max+1, 15, 'open')
+5. Refresh batch list and auto-select the new batch
 ```
 
-**Batch assignment flow:**
+**Bulk assignment logic:**
+
 ```text
-1. Admin opens student detail dialog
-2. Admin clicks "Assign to Batch" (or sees current assignment)
-3. Selects Program -> fetches locations offering that program
-4. Selects Location -> fetches open/full batches for that program+location
-5. Selects Batch -> clicks "Assign"
-6. System updates student_registrations.batch_id, program_id, preferred_location_id
-7. System increments course_batches.current_count
-8. If count reaches max, batch status auto-updates to 'full'
+1. Admin checks multiple students via checkboxes
+2. Clicks "Bulk Assign to Batch" in the floating bar
+3. Selects Program, Location, Batch (or creates a new one)
+4. System filters: only approved/enrolled students proceed
+5. For each student:
+   a. If student had a previous batch_id, decrement old batch count
+   b. Update student_registrations with new batch_id, program_id, preferred_location_id
+6. After all updates: set new batch current_count = previous count + number of newly assigned students
+7. If new count >= max_students, set batch status to 'full'
+8. Show summary toast: "X students assigned, Y skipped (wrong status)"
 ```
 
-No new database tables or migrations are required. All operations use existing columns and RLS policies that already grant admin/super_admin full access.
+No database migrations are needed -- all required tables and columns already exist.
 
