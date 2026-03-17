@@ -439,6 +439,15 @@ export default function AdminPrograms() {
                     <Label htmlFor="is_active">Active (visible to students)</Label>
                   </div>
 
+                  <div className="flex items-center gap-3">
+                    <Switch
+                      id="is_free_short_course"
+                      checked={formData.is_free_short_course}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_free_short_course: checked, ...(checked ? { tuition_fee: 0, registration_fee: 0 } : {}) })}
+                    />
+                    <Label htmlFor="is_free_short_course">Free Short Course (Warri)</Label>
+                  </div>
+
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="description">Description</Label>
                     <Textarea
