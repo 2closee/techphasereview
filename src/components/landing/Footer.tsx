@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { Monitor, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
+import { Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
+import logoImg from "@/assets/logo.png";
 
 const Footer = () => {
   const { settings } = useSettings();
@@ -40,14 +41,8 @@ const Footer = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Brand Column */}
           <div className="lg:col-span-2">
-            <Link to="/" className="flex items-center gap-3 mb-6">
-              <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-primary shadow-primary">
-                <Monitor className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-display text-xl font-bold text-secondary-foreground">Meranos</span>
-                <span className="text-xs text-secondary-foreground/60 font-body tracking-wider">NIGERIA LIMITED</span>
-              </div>
+            <Link to="/" className="flex items-center gap-2 mb-6">
+              <img src={logoImg} alt="Onlinnodes Logo" className="h-10 w-auto" />
             </Link>
             <p className="text-secondary-foreground/70 font-body mb-6 max-w-sm">
               {settings.footer_description}

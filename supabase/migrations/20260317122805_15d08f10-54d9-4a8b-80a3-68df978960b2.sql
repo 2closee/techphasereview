@@ -1,0 +1,1 @@
+ALTER TABLE public.programs ADD COLUMN IF NOT EXISTS is_free_short_course boolean NOT NULL DEFAULT false;
