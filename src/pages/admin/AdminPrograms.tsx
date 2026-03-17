@@ -141,6 +141,7 @@ export default function AdminPrograms() {
         registration_fee: program.registration_fee || 0,
         max_students: program.max_students || undefined,
         is_active: program.is_active,
+        is_free_short_course: (program as any).is_free_short_course || false,
       });
     } else {
       setEditingProgram(null);
