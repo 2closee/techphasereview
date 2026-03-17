@@ -114,13 +114,21 @@ const ProgramsSection = () => {
                       </div>
                       
                       <div className="space-y-1">
-                        <div className="text-sm text-muted-foreground font-body">
-                          <span className="font-semibold text-foreground">Tuition:</span> {formatCurrency(Number(program.tuition_fee))}
-                        </div>
-                        {program.registration_fee && Number(program.registration_fee) > 0 && (
-                          <div className="text-sm text-muted-foreground font-body">
-                            <span className="font-semibold text-foreground">Registration:</span> {formatCurrency(Number(program.registration_fee))}
+                        {program.is_free_short_course ? (
+                          <div className="text-sm font-semibold text-on-green font-body">
+                            FREE — No fees required
                           </div>
+                        ) : (
+                          <>
+                            <div className="text-sm text-muted-foreground font-body">
+                              <span className="font-semibold text-foreground">Tuition:</span> {formatCurrency(Number(program.tuition_fee))}
+                            </div>
+                            {program.registration_fee && Number(program.registration_fee) > 0 && (
+                              <div className="text-sm text-muted-foreground font-body">
+                                <span className="font-semibold text-foreground">Registration:</span> {formatCurrency(Number(program.registration_fee))}
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
 
