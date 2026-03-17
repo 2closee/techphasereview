@@ -70,6 +70,15 @@ const HeroSection = () => {
             </a>
           </div>
 
+          {/* Free Course Banner */}
+          <div className="mt-8 animate-fade-up" style={{ animationDelay: "0.35s" }}>
+            <Link to="/free-course" className="inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-accent border border-primary/20 hover:border-primary/40 transition-colors group">
+              <span className="px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-xs font-bold">FREE</span>
+              <span className="text-sm font-medium text-foreground">3-Week Short Course — Warri Center Only</span>
+              <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+
           {/* Stats */}
           <div className="grid grid-cols-3 gap-8 mt-16 pt-16 border-t border-border animate-fade-up" style={{ animationDelay: "0.4s" }}>
             <div className="text-center">
