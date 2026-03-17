@@ -25,6 +25,7 @@ const programSchema = z.object({
   registration_fee: z.number().min(0).optional(),
   max_students: z.number().min(1).optional(),
   is_active: z.boolean(),
+  is_free_short_course: z.boolean(),
 });
 
 type Program = {
@@ -67,6 +68,7 @@ const defaultFormData: ProgramFormData = {
   registration_fee: 0,
   max_students: undefined,
   is_active: true,
+  is_free_short_course: false,
 };
 
 export default function AdminPrograms() {
@@ -139,6 +141,7 @@ export default function AdminPrograms() {
         registration_fee: program.registration_fee || 0,
         max_students: program.max_students || undefined,
         is_active: program.is_active,
+        is_free_short_course: (program as any).is_free_short_course || false,
       });
     } else {
       setEditingProgram(null);
@@ -250,6 +253,7 @@ export default function AdminPrograms() {
       registration_fee: formData.registration_fee || null,
       max_students: formData.max_students || null,
       is_active: formData.is_active,
+      is_free_short_course: formData.is_free_short_course,
     };
 
     if (editingProgram) {
@@ -435,6 +439,15 @@ export default function AdminPrograms() {
                     <Label htmlFor="is_active">Active (visible to students)</Label>
                   </div>
 
+                  <div className="flex items-center gap-3">
+                    <Switch
+                      id="is_free_short_course"
+                      checked={formData.is_free_short_course}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_free_short_course: checked, ...(checked ? { tuition_fee: 0, registration_fee: 0 } : {}) })}
+                    />
+                    <Label htmlFor="is_free_short_course">Free Short Course (Warri)</Label>
+                  </div>
+
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="description">Description</Label>
                     <Textarea
@@ -553,6 +566,9 @@ export default function AdminPrograms() {
                       <Badge variant={program.is_active ? 'default' : 'secondary'}>
                         {program.is_active ? 'Active' : 'Inactive'}
                       </Badge>
+                      {(program as any).is_free_short_course && (
+                        <Badge variant="outline" className="border-primary text-primary">Free</Badge>
+                      )}
                     </div>
                     <div className="flex gap-1">
                       <Button
