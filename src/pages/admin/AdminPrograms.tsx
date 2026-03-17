@@ -68,6 +68,7 @@ const defaultFormData: ProgramFormData = {
   registration_fee: 0,
   max_students: undefined,
   is_active: true,
+  is_free_short_course: false,
 };
 
 export default function AdminPrograms() {
