@@ -348,7 +348,7 @@ export default function FreeShortCourse() {
                                 ) : (
                                   <Cpu className="w-4 h-4 text-primary" />
                                 )}
-                                {course.name} — {course.duration} {course.duration_unit} (Free)
+                                {course.name} — 3 Weeks (Free)
                               </span>
                             </SelectItem>
                           ))}
