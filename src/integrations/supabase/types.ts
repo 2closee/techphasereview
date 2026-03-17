@@ -573,6 +573,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          is_free_short_course: boolean
           max_students: number | null
           name: string
           program_code: number | null
@@ -592,6 +593,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_free_short_course?: boolean
           max_students?: number | null
           name: string
           program_code?: number | null
@@ -611,6 +613,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_free_short_course?: boolean
           max_students?: number | null
           name?: string
           program_code?: number | null
