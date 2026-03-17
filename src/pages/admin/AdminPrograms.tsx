@@ -25,6 +25,7 @@ const programSchema = z.object({
   registration_fee: z.number().min(0).optional(),
   max_students: z.number().min(1).optional(),
   is_active: z.boolean(),
+  is_free_short_course: z.boolean(),
 });
 
 type Program = {
