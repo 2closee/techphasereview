@@ -86,13 +86,20 @@ const ProgramsSection = () => {
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <CardHeader className="pb-4">
+                    {program.is_free_short_course && (
+                      <div className="mb-3 -mt-1">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-on-green/15 text-on-green border border-on-green/30 uppercase tracking-wider">
+                          🎓 3 Weeks Free
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between mb-4">
                       <div className={`p-3 rounded-xl ${accent.bg}`}>
                         <IconComp className={`w-6 h-6 ${accent.text}`} />
                       </div>
                       <div className="flex items-center gap-1 text-sm text-muted-foreground font-mono">
                         <Clock className="w-4 h-4" />
-                        {program.duration} {program.duration_unit}
+                        {program.is_free_short_course ? '3 Weeks' : `${program.duration} ${program.duration_unit}`}
                       </div>
                     </div>
                     <CardTitle className="text-xl font-display">{program.name}</CardTitle>
@@ -107,13 +114,21 @@ const ProgramsSection = () => {
                       </div>
                       
                       <div className="space-y-1">
-                        <div className="text-sm text-muted-foreground font-body">
-                          <span className="font-semibold text-foreground">Tuition:</span> {formatCurrency(Number(program.tuition_fee))}
-                        </div>
-                        {program.registration_fee && Number(program.registration_fee) > 0 && (
-                          <div className="text-sm text-muted-foreground font-body">
-                            <span className="font-semibold text-foreground">Registration:</span> {formatCurrency(Number(program.registration_fee))}
+                        {program.is_free_short_course ? (
+                          <div className="text-sm font-semibold text-on-green font-body">
+                            FREE — No fees required
                           </div>
+                        ) : (
+                          <>
+                            <div className="text-sm text-muted-foreground font-body">
+                              <span className="font-semibold text-foreground">Tuition:</span> {formatCurrency(Number(program.tuition_fee))}
+                            </div>
+                            {program.registration_fee && Number(program.registration_fee) > 0 && (
+                              <div className="text-sm text-muted-foreground font-body">
+                                <span className="font-semibold text-foreground">Registration:</span> {formatCurrency(Number(program.registration_fee))}
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
 
@@ -130,10 +145,10 @@ const ProgramsSection = () => {
 
                       <Button 
                         variant="outline" 
-                        className={`w-full mt-4 ${accent.border} group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors`}
-                        onClick={() => navigate(`/register?program_id=${program.id}`)}
+                        className={`w-full mt-4 ${program.is_free_short_course ? 'border-on-green/30 group-hover:bg-on-green group-hover:text-white group-hover:border-on-green' : `${accent.border} group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary`} transition-colors`}
+                        onClick={() => navigate(program.is_free_short_course ? '/free-course' : `/register?program_id=${program.id}`)}
                       >
-                        Enroll Now
+                        {program.is_free_short_course ? 'Register Free' : 'Enroll Now'}
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </div>

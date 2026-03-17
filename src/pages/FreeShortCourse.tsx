@@ -95,7 +95,8 @@ export default function FreeShortCourse() {
         .in('id', lp.map(l => l.program_id))
         .eq('is_active', true)
         .eq('is_free_short_course', true);
-      return data || [];
+      // Filter out meta/placeholder entries that aren't actual courses
+      return (data || []).filter(c => !c.name.toLowerCase().includes('free ict course') && !c.name.toLowerCase().includes('free short course'));
     },
     enabled: !!warriLocation?.id,
   });
