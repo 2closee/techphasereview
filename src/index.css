@@ -181,7 +181,9 @@
     background: var(--gradient-hero);
   }
   
-  .shadow-soft {
+  .bg-gradient-gold {
+    background: var(--gradient-gold);
+  }
     box-shadow: var(--shadow-soft);
   }
   
