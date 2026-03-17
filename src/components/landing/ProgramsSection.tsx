@@ -145,10 +145,10 @@ const ProgramsSection = () => {
 
                       <Button 
                         variant="outline" 
-                        className={`w-full mt-4 ${accent.border} group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors`}
-                        onClick={() => navigate(`/register?program_id=${program.id}`)}
+                        className={`w-full mt-4 ${program.is_free_short_course ? 'border-on-green/30 group-hover:bg-on-green group-hover:text-white group-hover:border-on-green' : `${accent.border} group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary`} transition-colors`}
+                        onClick={() => navigate(program.is_free_short_course ? '/free-course' : `/register?program_id=${program.id}`)}
                       >
-                        Enroll Now
+                        {program.is_free_short_course ? 'Register Free' : 'Enroll Now'}
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </div>
