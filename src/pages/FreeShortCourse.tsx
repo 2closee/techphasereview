@@ -269,7 +269,7 @@ export default function FreeShortCourse() {
                     <div>
                       <p className="font-medium text-foreground">{selectedProgram.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {selectedProgram.duration} {selectedProgram.duration_unit} • FREE
+                        3 Weeks • FREE
                       </p>
                     </div>
                   </div>
