@@ -197,6 +197,10 @@
     box-shadow: var(--shadow-glow);
   }
   
+  .shadow-gold {
+    box-shadow: var(--shadow-gold);
+  }
+  
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }
