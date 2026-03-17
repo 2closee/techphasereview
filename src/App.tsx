@@ -48,6 +48,7 @@ import StudentProfile from "./pages/student/StudentProfile";
 import AdminScholarships from "./pages/admin/AdminScholarships";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import FreeShortCourse from "./pages/FreeShortCourse";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
