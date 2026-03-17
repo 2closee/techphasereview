@@ -11,34 +11,13 @@ const ContactSection = () => {
   const { settings } = useSettings();
 
   const contactInfo = [
-    {
-      icon: MapPin,
-      title: "Our Location",
-      details: settings.contact_address,
-    },
-    {
-      icon: Phone,
-      title: "Call Us",
-      details: settings.contact_phone,
-    },
-    {
-      icon: Mail,
-      title: "Email Us",
-      details: settings.contact_email,
-    },
-    {
-      icon: Clock,
-      title: "Office Hours",
-      details: settings.contact_office_hours,
-    },
+    { icon: MapPin, title: "Our Location", details: settings.contact_address, color: "text-on-red", bg: "bg-on-red/10" },
+    { icon: Phone, title: "Call Us", details: settings.contact_phone, color: "text-on-blue", bg: "bg-on-blue/10" },
+    { icon: Mail, title: "Email Us", details: settings.contact_email, color: "text-on-green", bg: "bg-on-green/10" },
+    { icon: Clock, title: "Office Hours", details: settings.contact_office_hours, color: "text-on-orange", bg: "bg-on-orange/10" },
   ];
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    message: "",
-  });
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,15 +29,14 @@ const ContactSection = () => {
     <section id="contact" className="py-24 bg-background">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <span className="text-primary font-semibold text-sm uppercase tracking-wider font-body">
-            Get In Touch
+          <span className="font-mono text-primary font-medium text-sm uppercase tracking-wider">
+            // contact_us
           </span>
           <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mt-4 mb-6">
             Have Questions? <span className="text-gradient-primary">Let's Talk</span>
           </h2>
           <p className="text-muted-foreground text-lg font-body">
-            Our admissions team is here to help. Reach out with any questions about our
-            programs, fees, or enrollment process.
+            Our admissions team is ready to help with any questions about programs, fees, or enrollment.
           </p>
         </div>
 
@@ -72,8 +50,8 @@ const ContactSection = () => {
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <CardContent className="flex items-start gap-4 p-5">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <item.icon className="w-5 h-5 text-primary" />
+                  <div className={`w-10 h-10 rounded-xl ${item.bg} flex items-center justify-center flex-shrink-0`}>
+                    <item.icon className={`w-5 h-5 ${item.color}`} />
                   </div>
                   <div>
                     <CardTitle className="text-base font-display mb-1">{item.title}</CardTitle>
@@ -107,9 +85,9 @@ const ContactSection = () => {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground font-body mb-2 block">Message</label>
-                  <Textarea placeholder="Tell us about your interests and how we can help..." value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} required rows={4} className="bg-background resize-none" />
+                  <Textarea placeholder="Tell us about your interests..." value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} required rows={4} className="bg-background resize-none" />
                 </div>
-                <Button size="lg" className="w-full group bg-gradient-primary hover:opacity-90">
+                <Button size="lg" className="w-full group bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow">
                   Send Message
                   <Send className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>

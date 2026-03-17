@@ -62,23 +62,22 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        gold: {
-          DEFAULT: "hsl(var(--gold))",
-          light: "hsl(var(--gold-light))",
-          dark: "hsl(var(--gold-dark))",
-        },
+        // Onlinnodes brand colors
+        "on-red": "hsl(var(--on-red))",
+        "on-orange": "hsl(var(--on-orange))",
+        "on-yellow": "hsl(var(--on-yellow))",
+        "on-green": "hsl(var(--on-green))",
+        "on-blue": "hsl(var(--on-blue))",
+        "on-purple": "hsl(var(--on-purple))",
         navy: {
           DEFAULT: "hsl(var(--navy))",
           light: "hsl(var(--navy-light))",
         },
-        cream: {
-          DEFAULT: "hsl(var(--cream))",
-          dark: "hsl(var(--cream-dark))",
-        },
       },
       fontFamily: {
-        display: ["Playfair Display", "serif"],
+        display: ["Space Grotesk", "sans-serif"],
         body: ["Inter", "sans-serif"],
+        mono: ["JetBrains Mono", "monospace"],
       },
       borderRadius: {
         lg: "var(--radius)",
