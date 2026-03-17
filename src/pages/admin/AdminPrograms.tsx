@@ -253,6 +253,7 @@ export default function AdminPrograms() {
       registration_fee: formData.registration_fee || null,
       max_students: formData.max_students || null,
       is_active: formData.is_active,
+      is_free_short_course: formData.is_free_short_course,
     };
 
     if (editingProgram) {
