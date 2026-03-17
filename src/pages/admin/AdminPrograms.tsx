@@ -566,6 +566,9 @@ export default function AdminPrograms() {
                       <Badge variant={program.is_active ? 'default' : 'secondary'}>
                         {program.is_active ? 'Active' : 'Inactive'}
                       </Badge>
+                      {(program as any).is_free_short_course && (
+                        <Badge variant="outline" className="border-primary text-primary">Free</Badge>
+                      )}
                     </div>
                     <div className="flex gap-1">
                       <Button
