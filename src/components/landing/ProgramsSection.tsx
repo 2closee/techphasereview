@@ -86,13 +86,20 @@ const ProgramsSection = () => {
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <CardHeader className="pb-4">
+                    {program.is_free_short_course && (
+                      <div className="mb-3 -mt-1">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-on-green/15 text-on-green border border-on-green/30 uppercase tracking-wider">
+                          🎓 3 Weeks Free
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between mb-4">
                       <div className={`p-3 rounded-xl ${accent.bg}`}>
                         <IconComp className={`w-6 h-6 ${accent.text}`} />
                       </div>
                       <div className="flex items-center gap-1 text-sm text-muted-foreground font-mono">
                         <Clock className="w-4 h-4" />
-                        {program.duration} {program.duration_unit}
+                        {program.is_free_short_course ? '3 Weeks' : `${program.duration} ${program.duration_unit}`}
                       </div>
                     </div>
                     <CardTitle className="text-xl font-display">{program.name}</CardTitle>
