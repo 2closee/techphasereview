@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { Monitor, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
+import { Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
+import logoImg from "@/assets/logo.png";
 
 const Footer = () => {
   const { settings } = useSettings();
