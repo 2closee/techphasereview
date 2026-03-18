@@ -85,7 +85,7 @@ export default function AdminDashboard() {
     try {
       // Fetch stats
       const [studentsRes, teachersRes, programsRes, paymentsRes] = await Promise.all([
-        supabase.from('student_registrations').select('id, first_name, last_name, email, program_id, status, created_at, programs(name)').eq('status', 'enrolled'),
+        supabase.from('student_registrations').select('id, first_name, last_name, email, program_id, status, created_at, programs(name)').in('status', ['enrolled', 'approved']),
         supabase.from('teachers').select('id').eq('is_active', true),
         supabase.from('programs').select('*').eq('is_active', true),
         supabase.from('student_payments').select('amount, created_at').gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString())
