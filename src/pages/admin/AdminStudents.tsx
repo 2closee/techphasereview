@@ -353,8 +353,31 @@ export default function AdminStudents() {
     fetchRegistrations();
   };
 
+  const handleBulkWaive = async () => {
+    const ids = Array.from(selectedStudents);
+    if (ids.length === 0) return;
+    setBulkWaiving(true);
+    const { error } = await supabase
+      .from('student_registrations')
+      .update({
+        payment_status: 'waived',
+        status: 'approved',
+        reviewed_at: new Date().toISOString(),
+      })
+      .in('id', ids);
+    setBulkWaiving(false);
+    if (error) {
+      toast.error(error.message || 'Failed to waive payment');
+      return;
+    }
+    toast.success(`${ids.length} student(s) approved with payment waived`);
+    setSelectedStudents(new Set());
+    fetchRegistrations();
+  };
+
   const showBulkCreateButton = bulkSelectedProgram && bulkSelectedLocation && !bulkLoadingBatches &&
     (bulkBatches.length === 0 || bulkBatches.every(b => b.status === 'full'));
+
 
   return (
     <DashboardLayout title="Student Registrations">
