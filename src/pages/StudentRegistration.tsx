@@ -319,7 +319,9 @@ export default function StudentRegistration() {
           guarantor_phone: formData.guarantor_phone || null,
           guarantor_email: formData.guarantor_email || null,
           terms_accepted: formData.terms_accepted || false,
-          payment_status: 'unpaid',
+          payment_status: selectedProgramIsFree ? 'waived' : 'unpaid',
+          payment_plan: selectedProgramIsFree ? 'free' : null,
+
           status: 'pending',
         });
 
@@ -801,7 +803,7 @@ export default function StudentRegistration() {
                                   ) : (
                                     <Cpu className="w-4 h-4 text-green-500" />
                                   )}
-                                  {program.name} - {program.duration} {program.duration_unit} ({formatCurrency(program.tuition_fee)})
+                                  {program.name} - {program.duration} {program.duration_unit} ({program.is_free_program ? 'Free' : formatCurrency(program.tuition_fee)})
                                 </span>
                               </SelectItem>
                             ))}
