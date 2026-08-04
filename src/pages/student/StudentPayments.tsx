@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { DollarSign, Loader2, Award } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { isSponsored, sponsorLabel } from '@/lib/paymentStatus';
 
 export default function StudentPayments() {
   const { user } = useAuth();
@@ -16,6 +17,7 @@ export default function StudentPayments() {
   const [registrationFee, setRegistrationFee] = useState(0);
   const [scholarship, setScholarship] = useState<{ granted_percentage: number } | null>(null);
   const [isFreeProgram, setIsFreeProgram] = useState(false);
+  const [sponsorName, setSponsorName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -23,7 +25,7 @@ export default function StudentPayments() {
       // Get registration with program fees
       const { data: regs } = await supabase
         .from('student_registrations')
-        .select('id, program_id, programs:program_id (tuition_fee, registration_fee, is_free_program)')
+        .select('id, program_id, payment_status, programs:program_id (tuition_fee, registration_fee, is_free_program, sponsor_name)')
         .eq('user_id', user.id);
 
       if (!regs?.length) { setLoading(false); return; }
@@ -31,7 +33,8 @@ export default function StudentPayments() {
       const reg = regs[0] as any;
       const programTuition = reg.programs?.tuition_fee || 0;
       const programRegFee = reg.programs?.registration_fee || 0;
-      setIsFreeProgram(!!reg.programs?.is_free_program);
+      setIsFreeProgram(isSponsored(reg.payment_status, reg.programs?.is_free_program));
+      setSponsorName(reg.programs?.sponsor_name ?? null);
       setTuitionFee(programTuition);
       setRegistrationFee(programRegFee);
 
@@ -80,9 +83,9 @@ export default function StudentPayments() {
         <Card className="border-green-500/20 bg-green-500/5">
           <CardContent className="p-8 text-center space-y-2">
             <Award className="w-10 h-10 mx-auto text-green-600" />
-            <p className="text-lg font-semibold text-foreground">No payment required for this program</p>
+            <p className="text-lg font-semibold text-foreground">{sponsorLabel(sponsorName)}</p>
             <p className="text-sm text-muted-foreground">
-              Your program is fully free. You have full access to your student portal.
+              No payment required — your tuition is fully covered. You have full access to your student portal.
             </p>
           </CardContent>
         </Card>

@@ -27,6 +27,7 @@ const programSchema = z.object({
   is_active: z.boolean(),
   is_free_short_course: z.boolean(),
   is_free_program: z.boolean(),
+  sponsor_name: z.string().max(120).optional(),
 
 });
 
@@ -72,6 +73,7 @@ const defaultFormData: ProgramFormData = {
   is_active: true,
   is_free_short_course: false,
   is_free_program: false,
+  sponsor_name: '',
 
 };
 
@@ -147,6 +149,7 @@ export default function AdminPrograms() {
         is_active: program.is_active,
         is_free_short_course: (program as any).is_free_short_course || false,
         is_free_program: (program as any).is_free_program || false,
+        sponsor_name: (program as any).sponsor_name || '',
 
       });
     } else {
@@ -261,6 +264,7 @@ export default function AdminPrograms() {
       is_active: formData.is_active,
       is_free_short_course: formData.is_free_short_course,
       is_free_program: formData.is_free_program,
+      sponsor_name: formData.sponsor_name?.trim() || null,
 
     };
 
@@ -427,6 +431,19 @@ export default function AdminPrograms() {
                         Students register normally and skip payment entirely.
                       </p>
                     )}
+                  </div>
+
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="sponsor_name">Sponsor Name (optional)</Label>
+                    <Input
+                      id="sponsor_name"
+                      value={formData.sponsor_name}
+                      onChange={(e) => setFormData({ ...formData, sponsor_name: e.target.value })}
+                      placeholder="e.g. PIND"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Shown to sponsored students as "100% Scholarship — paid by [sponsor]".
+                    </p>
                   </div>
 
                   {!formData.is_free_program && (

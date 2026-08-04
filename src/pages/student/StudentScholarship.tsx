@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useSettings } from '@/contexts/SettingsContext';
 import { z } from 'zod';
+import { isPaymentSettled, isSponsored, sponsorLabel } from '@/lib/paymentStatus';
 
 const scholarshipSchema = z.object({
   employment_status: z.enum(['employed', 'unemployed', 'self_employed', 'student']),
@@ -55,6 +56,8 @@ export default function StudentScholarship() {
   const [existingApp, setExistingApp] = useState<ExistingApplication | null>(null);
   const [registration, setRegistration] = useState<{ id: string; program_id: string; payment_status: string } | null>(null);
   const [registrationFeeStatus, setRegistrationFeeStatus] = useState<'unpaid' | 'paid'>('unpaid');
+  const [freeProgram, setFreeProgram] = useState(false);
+  const [sponsorName, setSponsorName] = useState<string | null>(null);
   const [showBankDetails, setShowBankDetails] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -77,12 +80,15 @@ export default function StudentScholarship() {
     try {
       const { data: reg } = await supabase
         .from('student_registrations')
-        .select('id, program_id, payment_status')
+        .select('id, program_id, payment_status, programs:program_id (is_free_program, sponsor_name)')
         .eq('user_id', user.id)
         .single();
 
       if (reg) {
-        setRegistration(reg);
+        setRegistration(reg as any);
+        const program = (reg as any).programs;
+        setFreeProgram(!!program?.is_free_program);
+        setSponsorName(program?.sponsor_name ?? null);
 
         // Check if registration fee has been paid (any payment recorded or payment_status is not unpaid)
         const { data: payments } = await supabase
@@ -94,7 +100,10 @@ export default function StudentScholarship() {
 
         if (payments && payments.length > 0) {
           setRegistrationFeeStatus('paid');
-        } else if (reg.payment_status === 'paid' || reg.payment_status === 'partial') {
+        } else if (
+          reg.payment_status === 'partial' ||
+          isPaymentSettled(reg.payment_status, program?.is_free_program)
+        ) {
           setRegistrationFeeStatus('paid');
         }
 
@@ -161,6 +170,41 @@ export default function StudentScholarship() {
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Fully sponsored / waived students hold an automatic 100% scholarship
+  if (isSponsored(registration?.payment_status, freeProgram)) {
+    return (
+      <DashboardLayout title="Scholarship">
+        <Card className="max-w-2xl mx-auto border-green-500/30 bg-green-500/5">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4">
+              <CheckCircle2 className="w-16 h-16 text-green-500" />
+            </div>
+            <CardTitle className="text-2xl">{sponsorLabel(sponsorName)}</CardTitle>
+            <CardDescription>
+              Your tuition is fully covered — there is nothing to apply for and nothing to pay.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
+              <span className="text-sm text-muted-foreground">Status</span>
+              <Badge className="bg-green-600 hover:bg-green-600">Granted</Badge>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+              <span className="text-sm text-muted-foreground">Granted Discount</span>
+              <span className="font-bold text-green-600 text-lg">100%</span>
+            </div>
+            {sponsorName && (
+              <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
+                <span className="text-sm text-muted-foreground">Sponsor</span>
+                <span className="font-semibold text-foreground">{sponsorName}</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </DashboardLayout>
     );
   }

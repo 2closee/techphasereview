@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
+import { isPaymentSettled, isSponsored, sponsorLabel } from '@/lib/paymentStatus';
 
 const WARRI_LOCATION_ID = 'af2ca449-9394-46dd-b4b3-216bb50e9aeb';
 
@@ -32,6 +33,8 @@ interface StudentRegistration {
     duration: string;
     duration_unit: string;
     tuition_fee: number;
+    is_free_program?: boolean | null;
+    sponsor_name?: string | null;
     start_date: string | null;
   } | null;
   training_locations: {
@@ -123,6 +126,8 @@ export default function StudentDashboard() {
             duration,
             duration_unit,
             tuition_fee,
+            is_free_program,
+            sponsor_name,
             start_date
           ),
           training_locations:preferred_location_id (
@@ -196,52 +201,7 @@ export default function StudentDashboard() {
             end_time,
             training_locations:location_id (
               name
-        )}
-
-        {/* Scholarship CTA */}
-        {!scholarshipStatus ? (
-          <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-start gap-4">
-                  <GraduationCap className="w-8 h-8 text-primary shrink-0 mt-1" />
-                  <div>
-                    <h3 className="font-display font-bold text-foreground text-lg">Need Financial Assistance?</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Apply for a scholarship covering 30% to 100% of your tuition fees.
-                    </p>
-                  </div>
-                </div>
-                <Link to="/student/scholarship">
-                  <Button>Apply for Scholarship</Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className={scholarshipStatus.status === 'approved' ? "border-green-500/20" : "border-primary/20"}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Award className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="font-medium text-foreground">Scholarship Application</p>
-                    <p className="text-sm text-muted-foreground">
-                      {scholarshipStatus.status === 'approved'
-                        ? "Approved - " + scholarshipStatus.granted_percentage + "% tuition discount"
-                        : scholarshipStatus.status === 'denied'
-                        ? 'Not approved'
-                        : 'Under review'}
-                    </p>
-                  </div>
-                </div>
-                <Badge variant={scholarshipStatus.status === 'approved' ? 'default' : scholarshipStatus.status === 'denied' ? 'destructive' : 'secondary'}>
-                  {scholarshipStatus.status}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        )
+            )
           `)
           .eq('program_id', regData.program_id)
           .gte('session_date', today)
@@ -263,7 +223,7 @@ export default function StudentDashboard() {
 
         if (scholarshipData) {
           setScholarshipStatus(scholarshipData);
-        } else {
+        } else if (!isPaymentSettled(regData.payment_status, (regData.programs as any)?.is_free_program)) {
           // No scholarship application - show prompt if not dismissed this session
           const dismissed = sessionStorage.getItem('scholarship_prompt_dismissed');
           if (!dismissed) {
@@ -293,7 +253,11 @@ export default function StudentDashboard() {
     : 0;
   const effectiveTuition = tuitionFee - scholarshipDiscount;
   const balanceDue = Math.max(0, effectiveTuition - totalPaid);
-  const isPaid = balanceDue === 0 && tuitionFee > 0;
+  const freeProgram = !!registration?.programs?.is_free_program;
+  const settled = isPaymentSettled(registration?.payment_status, freeProgram);
+  const sponsored = isSponsored(registration?.payment_status, freeProgram);
+  const sponsoredText = sponsorLabel(registration?.programs?.sponsor_name);
+  const isPaid = settled || (balanceDue === 0 && tuitionFee > 0);
 
   if (loading) {
     return (
@@ -330,12 +294,19 @@ export default function StudentDashboard() {
       icon: Clock, 
       color: 'text-green-500' 
     },
-    { 
-      title: 'Balance Due', 
-      value: formatCurrency(balanceDue), 
-      icon: CreditCard, 
-      color: isPaid ? 'text-green-500' : 'text-orange-500' 
-    },
+    settled
+      ? {
+          title: 'Tuition',
+          value: sponsored ? 'Sponsored' : 'Paid',
+          icon: Award,
+          color: 'text-green-500'
+        }
+      : { 
+          title: 'Balance Due', 
+          value: formatCurrency(balanceDue), 
+          icon: CreditCard, 
+          color: 'text-orange-500' 
+        },
     { 
       title: 'Progress', 
       value: courseProgress ? `${courseProgress.completion_percentage || 0}%` : '0%', 
@@ -381,7 +352,7 @@ export default function StudentDashboard() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        {(registration.payment_status === 'office_pending' || registration.payment_status === 'unpaid') && (
+        {!settled && (registration.payment_status === 'office_pending' || registration.payment_status === 'unpaid') && (
           <Card className="border-orange-500/30 bg-orange-500/10">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
@@ -397,6 +368,68 @@ export default function StudentDashboard() {
                     Amount due: {formatCurrency(tuitionFee)}
                   </p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Scholarship status */}
+        {sponsored ? (
+          <Card className="border-green-500/20 bg-green-500/5">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <Award className="w-5 h-5 text-green-600" />
+                  <div>
+                    <p className="font-medium text-foreground">{sponsoredText}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Your tuition is fully covered — no scholarship application needed.
+                    </p>
+                  </div>
+                </div>
+                <Badge className="bg-green-600 hover:bg-green-600">100% granted</Badge>
+              </div>
+            </CardContent>
+          </Card>
+        ) : scholarshipStatus ? (
+          <Card className={scholarshipStatus.status === 'approved' ? 'border-green-500/20' : 'border-primary/20'}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <Award className="w-5 h-5 text-primary" />
+                  <div>
+                    <p className="font-medium text-foreground">Scholarship Application</p>
+                    <p className="text-sm text-muted-foreground">
+                      {scholarshipStatus.status === 'approved'
+                        ? `Approved - ${scholarshipStatus.granted_percentage}% tuition discount`
+                        : scholarshipStatus.status === 'denied'
+                        ? 'Not approved'
+                        : 'Under review'}
+                    </p>
+                  </div>
+                </div>
+                <Badge variant={scholarshipStatus.status === 'approved' ? 'default' : scholarshipStatus.status === 'denied' ? 'destructive' : 'secondary'}>
+                  {scholarshipStatus.status}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-start gap-4">
+                  <GraduationCap className="w-8 h-8 text-primary shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-display font-bold text-foreground text-lg">Need Financial Assistance?</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Apply for a scholarship covering 30% to 100% of your tuition fees.
+                    </p>
+                  </div>
+                </div>
+                <Link to="/student/scholarship">
+                  <Button>Apply for Scholarship</Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
@@ -529,7 +562,7 @@ export default function StudentDashboard() {
                         ? 'bg-green-500/10 text-green-500' 
                         : 'bg-orange-500/10 text-orange-500'
                     }`}>
-                      {isPaid ? 'Paid' : 'Balance Due'}
+                      {sponsored ? 'Sponsored' : isPaid ? 'Paid' : 'Balance Due'}
                     </span>
                   </div>
                   
@@ -587,7 +620,22 @@ export default function StudentDashboard() {
           </Card>
         </div>
 
-        {/* Payment section */}
+        {/* Payment / sponsorship section */}
+        {sponsored ? (
+          <Card className="border-green-500/20 bg-green-500/5">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Award className="w-5 h-5 text-green-500" />
+                <div>
+                  <p className="font-medium text-foreground">{sponsoredText}</p>
+                  <p className="text-sm text-muted-foreground">
+                    No payment required — your training is fully covered.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
         <Card className={`${isPaid ? 'border-green-500/20 bg-green-500/5' : 'border-orange-500/20 bg-orange-500/5'}`}>
           <CardContent className="p-4">
             {isPaid ? (
@@ -639,6 +687,7 @@ export default function StudentDashboard() {
             )}
           </CardContent>
         </Card>
+        )}
 
         {/* Payment History */}
         {payments.length > 0 && (
