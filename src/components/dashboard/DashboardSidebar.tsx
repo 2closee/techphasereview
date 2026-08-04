@@ -84,6 +84,23 @@ interface DashboardSidebarProps {
 export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
   const { role, signOut, user } = useAuth();
   const location = useLocation();
+  const [sponsored, setSponsored] = useState(false);
+
+  useEffect(() => {
+    if (!user || role !== 'student') return;
+    let active = true;
+    supabase
+      .from('student_registrations')
+      .select('payment_status, programs:program_id (is_free_program)')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }: any) => {
+        if (active && data) {
+          setSponsored(isSponsored(data.payment_status, data.programs?.is_free_program));
+        }
+      });
+    return () => { active = false; };
+  }, [user, role]);
 
   // super_admin sees admin nav items
   const navItems = (role === 'admin' || role === 'super_admin')
@@ -92,6 +109,8 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
     ? accountantNavItems
     : role === 'teacher'
     ? teacherNavItems
+    : sponsored
+    ? studentNavItems.filter(i => i.href !== '/student/payments')
     : studentNavItems;
 
   const handleSignOut = async () => {
