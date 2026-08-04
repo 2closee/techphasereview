@@ -1,76 +1,56 @@
+# Free vs Paid Programs
 
+## Goal
 
-# Auto-Create Batches and Bulk Batch Assignment
+Let you mark any program as **Free** or **Paid** from the admin dashboard. Students register for a free program through the normal registration form, skip payment entirely, create their account, and get full student portal access once approved — no payment prompts or warning banners.
 
-## Problem Summary
+This is separate from the existing "Free Short Course (Warri)" flag, which stays as-is for the 3-week Warri course.
 
-1. **No batches exist** for some program+location combinations, so the batch assignment dropdown shows "No batches available" and the admin is stuck.
-2. There is no way to **assign batches in bulk** to multiple students at once -- the admin must open each student's detail dialog individually.
+## 1. Admin: choose program type
 
-## Solution
+In Admin > Programs, the add/edit dialog gets a **Program Type** selector at the top:
 
-### 1. Auto-Create Batch in BatchAssignment Component
+- **Paid program** — shows Tuition Fee and Registration Fee inputs as today.
+- **Free program** — hides the fee inputs and stores both fees as 0.
 
-When the admin selects a Program and Location but no batches exist, the system will automatically offer to create one. A "Create New Batch" button will appear in the batch dropdown area, which creates a new batch (batch_number = next sequential number) for that program+location pair and selects it.
+The program list shows a "Free" badge on free programs so you can tell them apart at a glance.
 
-### 2. Bulk Batch Assignment
+Switching an existing program between free and paid is allowed at any time; it only affects new registrations.
 
-Add a **checkbox selection system** to the student registrations table so the admin can select multiple students, then assign them all to a batch in one action.
+## 2. Registration form (no changes for the student)
 
-- Each row in the table gets a checkbox
-- A "Select All (on page)" checkbox appears in the table header
-- When students are selected, a floating action bar appears with a "Bulk Assign to Batch" button
-- Clicking it opens a dialog with Program, Location, and Batch dropdowns (with auto-create support)
-- On confirm, all selected students are updated and batch counts are adjusted
+The standard registration form stays the same. When the selected program is free:
 
----
+- The cost summary shows "Free — no payment required" instead of the fee breakdown.
+- On submit, the registration is saved with payment marked as waived and payment plan "free".
 
-## Changes
+## 3. Enrollment completion
 
-### File: `src/components/admin/BatchAssignment.tsx`
+After submitting, a student on a free program is taken straight to the **Create Account** step — the payment options screen (Pay Online / Installments / Scholarship / Pay at Office) is skipped entirely.
 
-- Add a "Create New Batch" button that appears when no batches exist for the selected program+location
-- The button creates a new `course_batches` row with `batch_number` = max existing + 1 (or 1 if none exist), `max_students` = 15, `status` = 'open'
-- After creation, auto-select the new batch
+## 4. Student portal
 
-### File: `src/pages/admin/AdminStudents.tsx`
+Free-program students see no "complete your payment" banner and have the same access as fully paid students. The Payments page shows "No payment required for this program".
 
-- Add `selectedStudents` state (Set of registration IDs) for checkbox tracking
-- Add checkboxes to each table row and a "select all on page" checkbox in the header
-- Add a bulk action bar that appears when students are selected, showing count and a "Bulk Assign to Batch" button
-- Add a bulk assignment dialog containing Program/Location/Batch selects (reusing the same cascading logic from BatchAssignment) with auto-create batch support
-- The bulk assign function loops through selected students, updates their `batch_id`, `program_id`, and `preferred_location_id`, and increments batch `current_count` accordingly
-- Only students with status "approved" or "enrolled" can be bulk-assigned (others are skipped with a warning)
+## 5. Admin approval
+
+Admin > Students works as today: you approve the registration. Free students are shown with a "Free" payment badge rather than "Unpaid", and they are eligible for batch assignment and matriculation numbers just like paid students.
 
 ---
 
-## Technical Details
+## Technical details
 
-**Auto-create batch logic (in BatchAssignment and bulk dialog):**
+**Database migration**
+- Add `is_free_program boolean not null default false` to `public.programs`.
+- Update the `assign_student_to_batch()` trigger so batch assignment and matriculation-number generation fire when `payment_status` becomes `'paid'` **or** `'waived'` (currently only `'paid'`).
 
-```text
-1. Admin selects Program + Location
-2. Query: SELECT MAX(batch_number) FROM course_batches WHERE program_id = X AND location_id = Y
-3. If no batches or all full -> show "Create New Batch" button
-4. On click: INSERT INTO course_batches (program_id, location_id, batch_number, max_students, status)
-   VALUES (X, Y, max+1, 15, 'open')
-5. Refresh batch list and auto-select the new batch
-```
+**Files to change**
+- `src/pages/admin/AdminPrograms.tsx` — add `is_free_program` to the form schema/state, add the Free/Paid type toggle, conditionally hide fee inputs, zero out fees when free, add the "Free" badge in the list.
+- `src/pages/StudentRegistration.tsx` — select `is_free_program` in the program query, show a "Free" summary instead of fees, insert `payment_status: 'waived'`, `payment_plan: 'free'` when the chosen program is free.
+- `supabase/functions/get-registration-public/index.ts` — include `is_free_program` in the returned program fields.
+- `src/pages/CompleteEnrollment.tsx` — treat `payment_status === 'waived'` (or a free program) as payment-complete so the flow jumps to the create-account step.
+- `src/pages/student/StudentDashboard.tsx` — exclude `'waived'` from the payment-warning banner condition.
+- `src/pages/student/StudentPayments.tsx` — show a "no payment required" state for free programs.
+- `src/pages/admin/AdminStudents.tsx` and `src/pages/accountant/AccountantRegistrations.tsx` — render `waived` as a "Free" badge and hide the "Mark Paid" action for those rows.
 
-**Bulk assignment logic:**
-
-```text
-1. Admin checks multiple students via checkboxes
-2. Clicks "Bulk Assign to Batch" in the floating bar
-3. Selects Program, Location, Batch (or creates a new one)
-4. System filters: only approved/enrolled students proceed
-5. For each student:
-   a. If student had a previous batch_id, decrement old batch count
-   b. Update student_registrations with new batch_id, program_id, preferred_location_id
-6. After all updates: set new batch current_count = previous count + number of newly assigned students
-7. If new count >= max_students, set batch status to 'full'
-8. Show summary toast: "X students assigned, Y skipped (wrong status)"
-```
-
-No database migrations are needed -- all required tables and columns already exist.
-
+No changes to Paystack functions; free registrations never touch them.
