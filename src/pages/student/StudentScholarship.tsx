@@ -55,6 +55,8 @@ export default function StudentScholarship() {
   const [existingApp, setExistingApp] = useState<ExistingApplication | null>(null);
   const [registration, setRegistration] = useState<{ id: string; program_id: string; payment_status: string } | null>(null);
   const [registrationFeeStatus, setRegistrationFeeStatus] = useState<'unpaid' | 'paid'>('unpaid');
+  const [freeProgram, setFreeProgram] = useState(false);
+  const [sponsorName, setSponsorName] = useState<string | null>(null);
   const [showBankDetails, setShowBankDetails] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
