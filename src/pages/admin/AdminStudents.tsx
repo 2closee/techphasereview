@@ -734,7 +734,20 @@ export default function AdminStudents() {
                     </div>
                   )}
 
+                  {/* Admin Override */}
+                  <EnrollmentOverride
+                    registrationId={selectedRegistration.id}
+                    programId={selectedRegistration.program_id}
+                    currentStatus={selectedRegistration.status}
+                    currentPaymentStatus={selectedRegistration.payment_status}
+                    onUpdated={() => {
+                      fetchRegistrations();
+                      setSelectedRegistration(null);
+                    }}
+                  />
+
                   {/* Batch Assignment */}
+
                   {(selectedRegistration.status === 'approved' || selectedRegistration.status === 'enrolled') && (
                     <BatchAssignment
                       studentId={selectedRegistration.id}
