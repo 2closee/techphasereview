@@ -23,7 +23,7 @@ export default function StudentPayments() {
       // Get registration with program fees
       const { data: regs } = await supabase
         .from('student_registrations')
-        .select('id, program_id, programs:program_id (tuition_fee, registration_fee, is_free_program)')
+        .select('id, program_id, payment_status, programs:program_id (tuition_fee, registration_fee, is_free_program, sponsor_name)')
         .eq('user_id', user.id);
 
       if (!regs?.length) { setLoading(false); return; }
@@ -31,7 +31,8 @@ export default function StudentPayments() {
       const reg = regs[0] as any;
       const programTuition = reg.programs?.tuition_fee || 0;
       const programRegFee = reg.programs?.registration_fee || 0;
-      setIsFreeProgram(!!reg.programs?.is_free_program);
+      setIsFreeProgram(isSponsored(reg.payment_status, reg.programs?.is_free_program));
+      setSponsorName(reg.programs?.sponsor_name ?? null);
       setTuitionFee(programTuition);
       setRegistrationFee(programRegFee);
 
