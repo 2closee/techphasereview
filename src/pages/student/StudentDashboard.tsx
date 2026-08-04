@@ -294,12 +294,19 @@ export default function StudentDashboard() {
       icon: Clock, 
       color: 'text-green-500' 
     },
-    { 
-      title: 'Balance Due', 
-      value: formatCurrency(balanceDue), 
-      icon: CreditCard, 
-      color: isPaid ? 'text-green-500' : 'text-orange-500' 
-    },
+    settled
+      ? {
+          title: 'Tuition',
+          value: sponsored ? 'Sponsored' : 'Paid',
+          icon: Award,
+          color: 'text-green-500'
+        }
+      : { 
+          title: 'Balance Due', 
+          value: formatCurrency(balanceDue), 
+          icon: CreditCard, 
+          color: 'text-orange-500' 
+        },
     { 
       title: 'Progress', 
       value: courseProgress ? `${courseProgress.completion_percentage || 0}%` : '0%', 
