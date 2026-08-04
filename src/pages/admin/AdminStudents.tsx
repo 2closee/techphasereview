@@ -12,6 +12,8 @@ import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, Id
 import { format } from 'date-fns';
 import { downloadCsv } from '@/utils/csvExport';
 import { BatchAssignment } from '@/components/admin/BatchAssignment';
+import { EnrollmentOverride } from '@/components/admin/EnrollmentOverride';
+
 
 type Registration = {
   id: string;
@@ -734,7 +736,20 @@ export default function AdminStudents() {
                     </div>
                   )}
 
+                  {/* Admin Override */}
+                  <EnrollmentOverride
+                    registrationId={selectedRegistration.id}
+                    programId={selectedRegistration.program_id}
+                    currentStatus={selectedRegistration.status}
+                    currentPaymentStatus={selectedRegistration.payment_status}
+                    onUpdated={() => {
+                      fetchRegistrations();
+                      setSelectedRegistration(null);
+                    }}
+                  />
+
                   {/* Batch Assignment */}
+
                   {(selectedRegistration.status === 'approved' || selectedRegistration.status === 'enrolled') && (
                     <BatchAssignment
                       studentId={selectedRegistration.id}
