@@ -32,6 +32,8 @@ interface StudentRegistration {
     duration: string;
     duration_unit: string;
     tuition_fee: number;
+    is_free_program?: boolean | null;
+    sponsor_name?: string | null;
     start_date: string | null;
   } | null;
   training_locations: {
