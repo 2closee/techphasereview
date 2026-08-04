@@ -36,8 +36,8 @@ async function header(doc: jsPDF, title: string, subtitle: string) {
   const [meranos, pind] = await Promise.all([toDataUrl(meranosLogo), toDataUrl(pindLogo)]);
 
   // Meranos left, PIND right
-  doc.addImage(meranos, 'JPEG', MARGIN, 12, 48, 13.5);
-  doc.addImage(pind, 'JPEG', PAGE_W - MARGIN - 34, 13, 34, 11);
+  doc.addImage(meranos, 'JPEG', MARGIN, 13, 46, 11.4);
+  doc.addImage(pind, 'JPEG', PAGE_W - MARGIN - 36, 14, 36, 8.5);
 
   doc.setDrawColor(20, 45, 85);
   doc.setLineWidth(0.8);
@@ -131,7 +131,7 @@ export async function downloadAdmissionLetter(s: DocStudent) {
 
   y = paragraph(
     doc,
-    `We are pleased to inform you that you have been offered admission into the six (6) month ${s.programName} training programme conducted by Meranos Nigeria Limited in partnership with the Foundation for Partnership Initiatives in the Niger Delta (PIND).`,
+    `We are pleased to inform you that you have been offered admission into the six (6) month ${s.programName} conducted by Meranos Nigeria Limited in partnership with the Foundation for Partnership Initiatives in the Niger Delta (PIND).`,
     y,
   );
   y = paragraph(
@@ -173,7 +173,7 @@ export async function downloadAcceptanceLetter(s: DocStudent) {
 
   y = paragraph(
     doc,
-    `I, ${s.fullName}, hereby accept the offer of admission into the six (6) month ${s.programName} training programme organised by Meranos Nigeria Limited and sponsored by the Foundation for Partnership Initiatives in the Niger Delta (PIND).`,
+    `I, ${s.fullName}, hereby accept the offer of admission into the six (6) month ${s.programName} organised by Meranos Nigeria Limited and sponsored by the Foundation for Partnership Initiatives in the Niger Delta (PIND).`,
     y,
   );
   y = paragraph(
