@@ -580,6 +580,7 @@ export type Database = {
           program_code: number | null
           registration_fee: number | null
           requirements: string[] | null
+          sponsor_name: string | null
           start_date: string | null
           tuition_fee: number
           updated_at: string | null
@@ -601,6 +602,7 @@ export type Database = {
           program_code?: number | null
           registration_fee?: number | null
           requirements?: string[] | null
+          sponsor_name?: string | null
           start_date?: string | null
           tuition_fee?: number
           updated_at?: string | null
@@ -622,6 +624,7 @@ export type Database = {
           program_code?: number | null
           registration_fee?: number | null
           requirements?: string[] | null
+          sponsor_name?: string | null
           start_date?: string | null
           tuition_fee?: number
           updated_at?: string | null
