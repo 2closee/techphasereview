@@ -73,6 +73,7 @@ const defaultFormData: ProgramFormData = {
   is_active: true,
   is_free_short_course: false,
   is_free_program: false,
+  sponsor_name: '',
 
 };
 
