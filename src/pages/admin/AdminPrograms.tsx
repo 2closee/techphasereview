@@ -429,6 +429,19 @@ export default function AdminPrograms() {
                     )}
                   </div>
 
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="sponsor_name">Sponsor Name (optional)</Label>
+                    <Input
+                      id="sponsor_name"
+                      value={formData.sponsor_name}
+                      onChange={(e) => setFormData({ ...formData, sponsor_name: e.target.value })}
+                      placeholder="e.g. PIND"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Shown to sponsored students as "100% Scholarship — paid by [sponsor]".
+                    </p>
+                  </div>
+
                   {!formData.is_free_program && (
                     <>
                       <div className="space-y-2">
