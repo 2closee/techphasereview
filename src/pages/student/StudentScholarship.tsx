@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useSettings } from '@/contexts/SettingsContext';
 import { z } from 'zod';
+import { isPaymentSettled, isSponsored, sponsorLabel } from '@/lib/paymentStatus';
 
 const scholarshipSchema = z.object({
   employment_status: z.enum(['employed', 'unemployed', 'self_employed', 'student']),
