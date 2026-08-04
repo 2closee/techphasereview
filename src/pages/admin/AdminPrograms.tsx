@@ -27,6 +27,7 @@ const programSchema = z.object({
   is_active: z.boolean(),
   is_free_short_course: z.boolean(),
   is_free_program: z.boolean(),
+  sponsor_name: z.string().max(120).optional(),
 
 });
 
