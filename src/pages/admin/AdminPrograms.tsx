@@ -149,6 +149,7 @@ export default function AdminPrograms() {
         is_active: program.is_active,
         is_free_short_course: (program as any).is_free_short_course || false,
         is_free_program: (program as any).is_free_program || false,
+        sponsor_name: (program as any).sponsor_name || '',
 
       });
     } else {
