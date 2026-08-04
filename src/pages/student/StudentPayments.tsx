@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { DollarSign, Loader2, Award } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { isSponsored, sponsorLabel } from '@/lib/paymentStatus';
 
 export default function StudentPayments() {
   const { user } = useAuth();
