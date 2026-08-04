@@ -647,6 +647,18 @@ export default function AdminStudents() {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-6 mt-4">
+                  {/* Admin Override */}
+                  <EnrollmentOverride
+                    registrationId={selectedRegistration.id}
+                    programId={selectedRegistration.program_id}
+                    currentStatus={selectedRegistration.status}
+                    currentPaymentStatus={selectedRegistration.payment_status}
+                    onUpdated={() => {
+                      fetchRegistrations();
+                      setSelectedRegistration(null);
+                    }}
+                  />
+
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-semibold">{selectedRegistration.first_name} {selectedRegistration.last_name}</h3>
@@ -777,18 +789,6 @@ export default function AdminStudents() {
                       )}
                     </div>
                   )}
-
-                  {/* Admin Override */}
-                  <EnrollmentOverride
-                    registrationId={selectedRegistration.id}
-                    programId={selectedRegistration.program_id}
-                    currentStatus={selectedRegistration.status}
-                    currentPaymentStatus={selectedRegistration.payment_status}
-                    onUpdated={() => {
-                      fetchRegistrations();
-                      setSelectedRegistration(null);
-                    }}
-                  />
 
                   {/* Batch Assignment */}
 
