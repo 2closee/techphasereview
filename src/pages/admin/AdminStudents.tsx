@@ -12,6 +12,8 @@ import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, Id
 import { format } from 'date-fns';
 import { downloadCsv } from '@/utils/csvExport';
 import { BatchAssignment } from '@/components/admin/BatchAssignment';
+import { EnrollmentOverride } from '@/components/admin/EnrollmentOverride';
+
 
 type Registration = {
   id: string;
