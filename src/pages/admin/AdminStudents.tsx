@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin, Download, Search, ChevronLeft, ChevronRight, Package, Plus } from 'lucide-react';
+import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin, Download, Search, ChevronLeft, ChevronRight, Package, Plus, ShieldCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { downloadCsv } from '@/utils/csvExport';
 import { BatchAssignment } from '@/components/admin/BatchAssignment';
@@ -70,6 +70,7 @@ export default function AdminStudents() {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null);
+  const [overrideRegistration, setOverrideRegistration] = useState<Registration | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [updating, setUpdating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -812,6 +813,36 @@ export default function AdminStudents() {
                       </p>
                     </div>
                   )}
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Admin Override Dialog */}
+        <Dialog open={!!overrideRegistration} onOpenChange={() => setOverrideRegistration(null)}>
+          <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+            {overrideRegistration && (
+              <>
+                <DialogHeader>
+                  <DialogTitle>
+                    Admin Override — {overrideRegistration.first_name} {overrideRegistration.last_name}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Approve enrollment or confirm/waive payment without the student re-registering.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="mt-4">
+                  <EnrollmentOverride
+                    registrationId={overrideRegistration.id}
+                    programId={overrideRegistration.program_id}
+                    currentStatus={overrideRegistration.status}
+                    currentPaymentStatus={overrideRegistration.payment_status}
+                    onUpdated={() => {
+                      fetchRegistrations();
+                      setOverrideRegistration(null);
+                    }}
+                  />
                 </div>
               </>
             )}
