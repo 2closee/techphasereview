@@ -558,7 +558,22 @@ export default function StudentDashboard() {
           </Card>
         </div>
 
-        {/* Payment section */}
+        {/* Payment / sponsorship section */}
+        {sponsored ? (
+          <Card className="border-green-500/20 bg-green-500/5">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Award className="w-5 h-5 text-green-500" />
+                <div>
+                  <p className="font-medium text-foreground">{sponsoredText}</p>
+                  <p className="text-sm text-muted-foreground">
+                    No payment required — your training is fully covered.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
         <Card className={`${isPaid ? 'border-green-500/20 bg-green-500/5' : 'border-orange-500/20 bg-orange-500/5'}`}>
           <CardContent className="p-4">
             {isPaid ? (
