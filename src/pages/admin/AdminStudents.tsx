@@ -457,6 +457,11 @@ export default function AdminStudents() {
               <Package className="w-4 h-4 mr-2" />
               Bulk Assign to Batch
             </Button>
+            <Button size="sm" variant="secondary" onClick={handleBulkWaive} disabled={bulkWaiving}>
+              {bulkWaiving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
+              Approve &amp; Waive Payment (Sponsored)
+            </Button>
+
             <Button size="sm" variant="ghost" onClick={() => setSelectedStudents(new Set())}>
               Clear Selection
             </Button>
