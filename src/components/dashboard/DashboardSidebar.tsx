@@ -65,6 +65,7 @@ const studentNavItems: NavItem[] = [
   { title: 'Grades', href: '/student/grades', icon: FileText },
   { title: 'Payments', href: '/student/payments', icon: CreditCard },
   { title: 'Scholarship', href: '/student/scholarship', icon: Award },
+  { title: 'Documents', href: '/student/documents', icon: FileText },
   { title: 'Profile', href: '/student/profile', icon: UserCircle },
 ];
 
