@@ -352,7 +352,7 @@ export default function StudentDashboard() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        {(registration.payment_status === 'office_pending' || registration.payment_status === 'unpaid') && (
+        {!settled && (registration.payment_status === 'office_pending' || registration.payment_status === 'unpaid') && (
           <Card className="border-orange-500/30 bg-orange-500/10">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
