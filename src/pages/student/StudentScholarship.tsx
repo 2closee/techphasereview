@@ -77,12 +77,15 @@ export default function StudentScholarship() {
     try {
       const { data: reg } = await supabase
         .from('student_registrations')
-        .select('id, program_id, payment_status')
+        .select('id, program_id, payment_status, programs:program_id (is_free_program, sponsor_name)')
         .eq('user_id', user.id)
         .single();
 
       if (reg) {
-        setRegistration(reg);
+        setRegistration(reg as any);
+        const program = (reg as any).programs;
+        setFreeProgram(!!program?.is_free_program);
+        setSponsorName(program?.sponsor_name ?? null);
 
         // Check if registration fee has been paid (any payment recorded or payment_status is not unpaid)
         const { data: payments } = await supabase
@@ -94,7 +97,10 @@ export default function StudentScholarship() {
 
         if (payments && payments.length > 0) {
           setRegistrationFeeStatus('paid');
-        } else if (reg.payment_status === 'paid' || reg.payment_status === 'partial') {
+        } else if (
+          reg.payment_status === 'partial' ||
+          isPaymentSettled(reg.payment_status, program?.is_free_program)
+        ) {
           setRegistrationFeeStatus('paid');
         }
 
