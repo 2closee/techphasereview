@@ -36,8 +36,8 @@ async function header(doc: jsPDF, title: string, subtitle: string) {
   const [meranos, pind] = await Promise.all([toDataUrl(meranosLogo), toDataUrl(pindLogo)]);
 
   // Meranos left, PIND right
-  doc.addImage(meranos, 'JPEG', MARGIN, 13, 46, 11.4);
-  doc.addImage(pind, 'JPEG', PAGE_W - MARGIN - 36, 14, 36, 8.5);
+  doc.addImage(meranos, 'JPEG', MARGIN, 12.5, 46, 12.1);
+  doc.addImage(pind, 'JPEG', PAGE_W - MARGIN - 36, 13.5, 36, 9.3);
 
   doc.setDrawColor(20, 45, 85);
   doc.setLineWidth(0.8);
