@@ -83,9 +83,9 @@ export default function StudentPayments() {
         <Card className="border-green-500/20 bg-green-500/5">
           <CardContent className="p-8 text-center space-y-2">
             <Award className="w-10 h-10 mx-auto text-green-600" />
-            <p className="text-lg font-semibold text-foreground">No payment required for this program</p>
+            <p className="text-lg font-semibold text-foreground">{sponsorLabel(sponsorName)}</p>
             <p className="text-sm text-muted-foreground">
-              Your program is fully free. You have full access to your student portal.
+              No payment required — your tuition is fully covered. You have full access to your student portal.
             </p>
           </CardContent>
         </Card>
