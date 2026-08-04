@@ -26,6 +26,8 @@ const programSchema = z.object({
   max_students: z.number().min(1).optional(),
   is_active: z.boolean(),
   is_free_short_course: z.boolean(),
+  is_free_program: z.boolean(),
+
 });
 
 type Program = {
@@ -69,6 +71,8 @@ const defaultFormData: ProgramFormData = {
   max_students: undefined,
   is_active: true,
   is_free_short_course: false,
+  is_free_program: false,
+
 };
 
 export default function AdminPrograms() {
@@ -142,6 +146,8 @@ export default function AdminPrograms() {
         max_students: program.max_students || undefined,
         is_active: program.is_active,
         is_free_short_course: (program as any).is_free_short_course || false,
+        is_free_program: (program as any).is_free_program || false,
+
       });
     } else {
       setEditingProgram(null);
@@ -249,11 +255,13 @@ export default function AdminPrograms() {
       category: formData.category,
       duration: formData.duration,
       duration_unit: formData.duration_unit,
-      tuition_fee: formData.tuition_fee,
-      registration_fee: formData.registration_fee || null,
+      tuition_fee: formData.is_free_program ? 0 : formData.tuition_fee,
+      registration_fee: formData.is_free_program ? 0 : (formData.registration_fee || null),
       max_students: formData.max_students || null,
       is_active: formData.is_active,
       is_free_short_course: formData.is_free_short_course,
+      is_free_program: formData.is_free_program,
+
     };
 
     if (editingProgram) {
@@ -396,28 +404,58 @@ export default function AdminPrograms() {
                     {errors.duration && <p className="text-sm text-destructive">{errors.duration}</p>}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="tuition_fee">Tuition Fee (₦) *</Label>
-                    <Input
-                      id="tuition_fee"
-                      type="number"
-                      value={formData.tuition_fee}
-                      onChange={(e) => setFormData({ ...formData, tuition_fee: Number(e.target.value) })}
-                      placeholder="e.g., 250000"
-                    />
-                    {errors.tuition_fee && <p className="text-sm text-destructive">{errors.tuition_fee}</p>}
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label>Program Type *</Label>
+                    <Select
+                      value={formData.is_free_program ? 'free' : 'paid'}
+                      onValueChange={(v) =>
+                        setFormData({
+                          ...formData,
+                          is_free_program: v === 'free',
+                          ...(v === 'free' ? { tuition_fee: 0, registration_fee: 0 } : {}),
+                        })
+                      }
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="paid">Paid program</SelectItem>
+                        <SelectItem value="free">Free program (no payment required)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {formData.is_free_program && (
+                      <p className="text-xs text-muted-foreground">
+                        Students register normally and skip payment entirely.
+                      </p>
+                    )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="registration_fee">Registration Fee (₦)</Label>
-                    <Input
-                      id="registration_fee"
-                      type="number"
-                      value={formData.registration_fee || ''}
-                      onChange={(e) => setFormData({ ...formData, registration_fee: Number(e.target.value) })}
-                      placeholder="e.g., 10000"
-                    />
-                  </div>
+                  {!formData.is_free_program && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="tuition_fee">Tuition Fee (₦) *</Label>
+                        <Input
+                          id="tuition_fee"
+                          type="number"
+                          value={formData.tuition_fee}
+                          onChange={(e) => setFormData({ ...formData, tuition_fee: Number(e.target.value) })}
+                          placeholder="e.g., 250000"
+                        />
+                        {errors.tuition_fee && <p className="text-sm text-destructive">{errors.tuition_fee}</p>}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="registration_fee">Registration Fee (₦)</Label>
+                        <Input
+                          id="registration_fee"
+                          type="number"
+                          value={formData.registration_fee || ''}
+                          onChange={(e) => setFormData({ ...formData, registration_fee: Number(e.target.value) })}
+                          placeholder="e.g., 10000"
+                        />
+                      </div>
+                    </>
+                  )}
+
 
                   <div className="space-y-2">
                     <Label htmlFor="max_students">Max Students</Label>
@@ -566,9 +604,10 @@ export default function AdminPrograms() {
                       <Badge variant={program.is_active ? 'default' : 'secondary'}>
                         {program.is_active ? 'Active' : 'Inactive'}
                       </Badge>
-                      {(program as any).is_free_short_course && (
+                      {((program as any).is_free_short_course || (program as any).is_free_program) && (
                         <Badge variant="outline" className="border-primary text-primary">Free</Badge>
                       )}
+
                     </div>
                     <div className="flex gap-1">
                       <Button

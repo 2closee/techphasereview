@@ -15,6 +15,7 @@ export default function StudentPayments() {
   const [tuitionFee, setTuitionFee] = useState(0);
   const [registrationFee, setRegistrationFee] = useState(0);
   const [scholarship, setScholarship] = useState<{ granted_percentage: number } | null>(null);
+  const [isFreeProgram, setIsFreeProgram] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -22,7 +23,7 @@ export default function StudentPayments() {
       // Get registration with program fees
       const { data: regs } = await supabase
         .from('student_registrations')
-        .select('id, program_id, programs:program_id (tuition_fee, registration_fee)')
+        .select('id, program_id, programs:program_id (tuition_fee, registration_fee, is_free_program)')
         .eq('user_id', user.id);
 
       if (!regs?.length) { setLoading(false); return; }
@@ -30,8 +31,10 @@ export default function StudentPayments() {
       const reg = regs[0] as any;
       const programTuition = reg.programs?.tuition_fee || 0;
       const programRegFee = reg.programs?.registration_fee || 0;
+      setIsFreeProgram(!!reg.programs?.is_free_program);
       setTuitionFee(programTuition);
       setRegistrationFee(programRegFee);
+
 
       // Fetch approved scholarship
       if (reg.program_id) {
@@ -71,9 +74,26 @@ export default function StudentPayments() {
   const totalCost = effectiveTuition + registrationFee;
   const balanceDue = Math.max(0, totalCost - totalPaid);
 
+  if (!loading && isFreeProgram) {
+    return (
+      <DashboardLayout title="My Payments">
+        <Card className="border-green-500/20 bg-green-500/5">
+          <CardContent className="p-8 text-center space-y-2">
+            <Award className="w-10 h-10 mx-auto text-green-600" />
+            <p className="text-lg font-semibold text-foreground">No payment required for this program</p>
+            <p className="text-sm text-muted-foreground">
+              Your program is fully free. You have full access to your student portal.
+            </p>
+          </CardContent>
+        </Card>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout title="My Payments">
       <div className="space-y-6">
+
         {/* Summary Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Card>

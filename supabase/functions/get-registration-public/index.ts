@@ -94,8 +94,10 @@ serve(async (req) => {
         programs:program_id (
           name,
           tuition_fee,
-          registration_fee
+          registration_fee,
+          is_free_program
         )
+
       `)
       .eq('id', registration_id)
       .maybeSingle();

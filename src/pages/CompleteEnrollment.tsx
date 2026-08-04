@@ -25,7 +25,9 @@ interface RegistrationData {
     name: string;
     tuition_fee: number;
     registration_fee: number | null;
+    is_free_program?: boolean;
   };
+
 }
 
 type Step = 'loading' | 'payment' | 'verifying' | 'create-account' | 'invalid';
@@ -93,7 +95,7 @@ export default function CompleteEnrollment() {
 
       setRegistration(reg as RegistrationData);
 
-      if (reg.payment_status === 'paid' || reg.payment_status === 'office_pending' || reg.payment_status === 'partial') {
+      if (reg.payment_status === 'paid' || reg.payment_status === 'waived' || reg.programs?.is_free_program || reg.payment_status === 'office_pending' || reg.payment_status === 'partial') {
         setStep('create-account');
       } else {
         setStep('payment');

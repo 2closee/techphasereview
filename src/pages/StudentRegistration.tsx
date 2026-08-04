@@ -52,7 +52,9 @@ type Program = {
   duration_unit: string;
   tuition_fee: number;
   registration_fee: number | null;
+  is_free_program?: boolean;
   is_active: boolean;
+
 };
 
 type TrainingLocation = {
@@ -190,6 +192,8 @@ export default function StudentRegistration() {
           duration_unit,
           tuition_fee,
           registration_fee,
+          is_free_program,
+
           is_active
         )
       `)
@@ -287,6 +291,9 @@ export default function StudentRegistration() {
       const projectedBatchNumber =
         formData.preferred_location_id === WARRI_LOCATION_ID && batchInfo ? batchInfo.batchNumber : null;
 
+      const selectedProgramIsFree = !!programs.find(p => p.id === formData.program_id)?.is_free_program;
+
+
       const { error } = await supabase
         .from('student_registrations')
         .insert({
@@ -315,7 +322,9 @@ export default function StudentRegistration() {
           guarantor_phone: formData.guarantor_phone || null,
           guarantor_email: formData.guarantor_email || null,
           terms_accepted: formData.terms_accepted || false,
-          payment_status: 'unpaid',
+          payment_status: selectedProgramIsFree ? 'waived' : 'unpaid',
+          payment_plan: selectedProgramIsFree ? 'free' : null,
+
           status: 'pending',
         });
 
@@ -426,34 +435,48 @@ export default function StudentRegistration() {
                       </p>
                     </div>
                   </div>
-                  <div className="border-t border-primary/10 pt-3 mt-3 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">Tuition Fee</span>
-                      <span className="font-semibold text-foreground">
-                        {formatCurrency(selectedProgram.tuition_fee)}
-                      </span>
-                    </div>
-                    {selectedProgram.registration_fee && selectedProgram.registration_fee > 0 && (
+                  {selectedProgram.is_free_program ? (
+                    <div className="border-t border-primary/10 pt-3 mt-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Registration Fee</span>
+                        <span className="font-semibold text-foreground">Total Cost</span>
+                        <span className="text-xl font-bold text-primary">Free</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        No payment required for this program.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="border-t border-primary/10 pt-3 mt-3 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Tuition Fee</span>
                         <span className="font-semibold text-foreground">
-                          {formatCurrency(selectedProgram.registration_fee)}
+                          {formatCurrency(selectedProgram.tuition_fee)}
                         </span>
                       </div>
-                    )}
-                    <div className="flex justify-between items-center pt-2 border-t border-primary/10">
-                      <span className="font-semibold text-foreground">Total Cost</span>
-                      <span className="text-xl font-bold text-primary">
-                        {formatCurrency(selectedProgram.tuition_fee + (selectedProgram.registration_fee || 0))}
-                      </span>
+                      {selectedProgram.registration_fee && selectedProgram.registration_fee > 0 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Registration Fee</span>
+                          <span className="font-semibold text-foreground">
+                            {formatCurrency(selectedProgram.registration_fee)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center pt-2 border-t border-primary/10">
+                        <span className="font-semibold text-foreground">Total Cost</span>
+                        <span className="text-xl font-bold text-primary">
+                          {formatCurrency(selectedProgram.tuition_fee + (selectedProgram.registration_fee || 0))}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 <p className="text-sm text-muted-foreground text-center">
-                  After registration, you'll create your account to access your student dashboard. 
-                  Payment can be made from your dashboard.
+                  {selectedProgram.is_free_program
+                    ? "After registration, you'll create your account to access your student dashboard right away."
+                    : "After registration, you'll create your account to access your student dashboard. Payment can be made from your dashboard."}
                 </p>
+
 
                 <Button 
                   variant="gold" 
@@ -783,7 +806,7 @@ export default function StudentRegistration() {
                                   ) : (
                                     <Cpu className="w-4 h-4 text-green-500" />
                                   )}
-                                  {program.name} - {program.duration} {program.duration_unit} ({formatCurrency(program.tuition_fee)})
+                                  {program.name} - {program.duration} {program.duration_unit} ({program.is_free_program ? 'Free' : formatCurrency(program.tuition_fee)})
                                 </span>
                               </SelectItem>
                             ))}
