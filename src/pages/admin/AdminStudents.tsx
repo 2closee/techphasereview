@@ -80,6 +80,8 @@ export default function AdminStudents() {
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkAssigning, setBulkAssigning] = useState(false);
+  const [bulkWaiving, setBulkWaiving] = useState(false);
+
 
   // Bulk dialog cascading selects
   const [bulkPrograms, setBulkPrograms] = useState<BulkProgram[]>([]);
