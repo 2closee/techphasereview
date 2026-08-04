@@ -200,52 +200,7 @@ export default function StudentDashboard() {
             end_time,
             training_locations:location_id (
               name
-        )}
-
-        {/* Scholarship CTA */}
-        {!scholarshipStatus ? (
-          <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-start gap-4">
-                  <GraduationCap className="w-8 h-8 text-primary shrink-0 mt-1" />
-                  <div>
-                    <h3 className="font-display font-bold text-foreground text-lg">Need Financial Assistance?</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Apply for a scholarship covering 30% to 100% of your tuition fees.
-                    </p>
-                  </div>
-                </div>
-                <Link to="/student/scholarship">
-                  <Button>Apply for Scholarship</Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className={scholarshipStatus.status === 'approved' ? "border-green-500/20" : "border-primary/20"}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Award className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="font-medium text-foreground">Scholarship Application</p>
-                    <p className="text-sm text-muted-foreground">
-                      {scholarshipStatus.status === 'approved'
-                        ? "Approved - " + scholarshipStatus.granted_percentage + "% tuition discount"
-                        : scholarshipStatus.status === 'denied'
-                        ? 'Not approved'
-                        : 'Under review'}
-                    </p>
-                  </div>
-                </div>
-                <Badge variant={scholarshipStatus.status === 'approved' ? 'default' : scholarshipStatus.status === 'denied' ? 'destructive' : 'secondary'}>
-                  {scholarshipStatus.status}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        )
+            )
           `)
           .eq('program_id', regData.program_id)
           .gte('session_date', today)
