@@ -17,6 +17,7 @@ export default function StudentPayments() {
   const [registrationFee, setRegistrationFee] = useState(0);
   const [scholarship, setScholarship] = useState<{ granted_percentage: number } | null>(null);
   const [isFreeProgram, setIsFreeProgram] = useState(false);
+  const [sponsorName, setSponsorName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
