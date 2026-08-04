@@ -125,6 +125,8 @@ export default function StudentDashboard() {
             duration,
             duration_unit,
             tuition_fee,
+            is_free_program,
+            sponsor_name,
             start_date
           ),
           training_locations:preferred_location_id (
