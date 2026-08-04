@@ -1,5 +1,6 @@
 import fs from 'fs';
 const orig = globalThis.fetch;
+(globalThis as any).FileReader = class { result: any; onloadend: any; onerror: any; readAsDataURL(b: any) { b.arrayBuffer().then((a: any) => { this.result = 'data:image/jpeg;base64,' + Buffer.from(a).toString('base64'); this.onloadend(); }); } };
 globalThis.fetch = async (u: any) => {
   const p = String(u).replace('file://','');
   const f = p.includes('pind') ? '/mnt/user-uploads/PIND_LOGO.jpeg' : '/mnt/user-uploads/Meranos_RGP.jpeg';
