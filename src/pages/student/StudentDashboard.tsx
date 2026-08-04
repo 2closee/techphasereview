@@ -625,6 +625,7 @@ export default function StudentDashboard() {
             )}
           </CardContent>
         </Card>
+        )}
 
         {/* Payment History */}
         {payments.length > 0 && (
