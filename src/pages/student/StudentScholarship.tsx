@@ -174,6 +174,41 @@ export default function StudentScholarship() {
     );
   }
 
+  // Fully sponsored / waived students hold an automatic 100% scholarship
+  if (isSponsored(registration?.payment_status, freeProgram)) {
+    return (
+      <DashboardLayout title="Scholarship">
+        <Card className="max-w-2xl mx-auto border-green-500/30 bg-green-500/5">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4">
+              <CheckCircle2 className="w-16 h-16 text-green-500" />
+            </div>
+            <CardTitle className="text-2xl">{sponsorLabel(sponsorName)}</CardTitle>
+            <CardDescription>
+              Your tuition is fully covered — there is nothing to apply for and nothing to pay.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
+              <span className="text-sm text-muted-foreground">Status</span>
+              <Badge className="bg-green-600 hover:bg-green-600">Granted</Badge>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+              <span className="text-sm text-muted-foreground">Granted Discount</span>
+              <span className="font-bold text-green-600 text-lg">100%</span>
+            </div>
+            {sponsorName && (
+              <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
+                <span className="text-sm text-muted-foreground">Sponsor</span>
+                <span className="font-semibold text-foreground">{sponsorName}</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </DashboardLayout>
+    );
+  }
+
   if (existingApp) {
     return (
       <DashboardLayout title="Scholarship Application">
