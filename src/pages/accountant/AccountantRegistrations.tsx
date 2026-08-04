@@ -93,14 +93,17 @@ export default function AccountantRegistrations() {
                       <TableCell className="hidden sm:table-cell">{(r.programs as any)?.name || 'N/A'}</TableCell>
                       <TableCell className="hidden md:table-cell text-xs">{r.email}</TableCell>
                       <TableCell>
-                        <Badge variant={r.payment_status === 'paid' ? 'default' : 'secondary'}>{r.payment_status || 'pending'}</Badge>
+                        <Badge variant={r.payment_status === 'paid' ? 'default' : r.payment_status === 'waived' ? 'outline' : 'secondary'}>
+                          {r.payment_status === 'waived' ? 'Free' : (r.payment_status || 'pending')}
+                        </Badge>
                       </TableCell>
                       <TableCell>
-                        {r.payment_status !== 'paid' && (
+                        {r.payment_status !== 'paid' && r.payment_status !== 'waived' && (
                           <Button size="sm" variant="outline" onClick={() => markAsPaid(r.id)} disabled={updatingId === r.id} className="min-h-[44px] sm:min-h-0">
                             {updatingId === r.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle className="w-4 h-4 sm:mr-1" /><span className="hidden sm:inline">Mark Paid</span></>}
                           </Button>
                         )}
+
                       </TableCell>
                     </TableRow>
                   ))}
