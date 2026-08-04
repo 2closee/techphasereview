@@ -45,6 +45,7 @@ import StudentGrades from "./pages/student/StudentGrades";
 import StudentPayments from "./pages/student/StudentPayments";
 import StudentScholarship from "./pages/student/StudentScholarship";
 import StudentProfile from "./pages/student/StudentProfile";
+import StudentDocuments from "./pages/student/StudentDocuments";
 import AdminScholarships from "./pages/admin/AdminScholarships";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -115,6 +116,7 @@ const App = () => (
               <Route path="/student/grades" element={<ProtectedRoute allowedRoles={['student']}><StudentGrades /></ProtectedRoute>} />
               <Route path="/student/payments" element={<ProtectedRoute allowedRoles={['student']}><StudentPayments /></ProtectedRoute>} />
               <Route path="/student/scholarship" element={<ProtectedRoute allowedRoles={['student']}><StudentScholarship /></ProtectedRoute>} />
+              <Route path="/student/documents" element={<ProtectedRoute allowedRoles={['student']}><StudentDocuments /></ProtectedRoute>} />
               <Route path="/student/profile" element={<ProtectedRoute allowedRoles={['student']}><StudentProfile /></ProtectedRoute>} />
               <Route path="/student/*" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} />
               
