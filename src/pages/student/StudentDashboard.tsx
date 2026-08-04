@@ -222,7 +222,7 @@ export default function StudentDashboard() {
 
         if (scholarshipData) {
           setScholarshipStatus(scholarshipData);
-        } else {
+        } else if (!isPaymentSettled(regData.payment_status, (regData.programs as any)?.is_free_program)) {
           // No scholarship application - show prompt if not dismissed this session
           const dismissed = sessionStorage.getItem('scholarship_prompt_dismissed');
           if (!dismissed) {
