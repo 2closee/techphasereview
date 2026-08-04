@@ -557,15 +557,26 @@ export default function AdminStudents() {
                           </Badge>
                         </td>
                         <td className="px-4 py-3">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSelectedRegistration(reg)}
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            View
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedRegistration(reg)}
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setOverrideRegistration(reg)}
+                            >
+                              <ShieldCheck className="w-4 h-4 mr-1" />
+                              Override
+                            </Button>
+                          </div>
                         </td>
+
                       </tr>
                     ))}
                   </tbody>
