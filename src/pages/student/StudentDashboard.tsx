@@ -500,7 +500,7 @@ export default function StudentDashboard() {
                         ? 'bg-green-500/10 text-green-500' 
                         : 'bg-orange-500/10 text-orange-500'
                     }`}>
-                      {isPaid ? 'Paid' : 'Balance Due'}
+                      {sponsored ? 'Sponsored' : isPaid ? 'Paid' : 'Balance Due'}
                     </span>
                   </div>
                   
