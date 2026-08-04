@@ -26,6 +26,8 @@ const programSchema = z.object({
   max_students: z.number().min(1).optional(),
   is_active: z.boolean(),
   is_free_short_course: z.boolean(),
+  is_free_program: z.boolean(),
+
 });
 
 type Program = {
@@ -69,6 +71,8 @@ const defaultFormData: ProgramFormData = {
   max_students: undefined,
   is_active: true,
   is_free_short_course: false,
+  is_free_program: false,
+
 };
 
 export default function AdminPrograms() {
@@ -142,6 +146,8 @@ export default function AdminPrograms() {
         max_students: program.max_students || undefined,
         is_active: program.is_active,
         is_free_short_course: (program as any).is_free_short_course || false,
+        is_free_program: (program as any).is_free_program || false,
+
       });
     } else {
       setEditingProgram(null);
