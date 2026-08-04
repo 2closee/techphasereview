@@ -1,4 +1,7 @@
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { isSponsored } from '@/lib/paymentStatus';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import {
