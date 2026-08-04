@@ -253,7 +253,11 @@ export default function StudentDashboard() {
     : 0;
   const effectiveTuition = tuitionFee - scholarshipDiscount;
   const balanceDue = Math.max(0, effectiveTuition - totalPaid);
-  const isPaid = balanceDue === 0 && tuitionFee > 0;
+  const freeProgram = !!registration?.programs?.is_free_program;
+  const settled = isPaymentSettled(registration?.payment_status, freeProgram);
+  const sponsored = isSponsored(registration?.payment_status, freeProgram);
+  const sponsoredText = sponsorLabel(registration?.programs?.sponsor_name);
+  const isPaid = settled || (balanceDue === 0 && tuitionFee > 0);
 
   if (loading) {
     return (
