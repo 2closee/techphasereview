@@ -15,6 +15,7 @@ export default function StudentPayments() {
   const [tuitionFee, setTuitionFee] = useState(0);
   const [registrationFee, setRegistrationFee] = useState(0);
   const [scholarship, setScholarship] = useState<{ granted_percentage: number } | null>(null);
+  const [isFreeProgram, setIsFreeProgram] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -22,7 +23,7 @@ export default function StudentPayments() {
       // Get registration with program fees
       const { data: regs } = await supabase
         .from('student_registrations')
-        .select('id, program_id, programs:program_id (tuition_fee, registration_fee)')
+        .select('id, program_id, programs:program_id (tuition_fee, registration_fee, is_free_program)')
         .eq('user_id', user.id);
 
       if (!regs?.length) { setLoading(false); return; }
@@ -30,8 +31,10 @@ export default function StudentPayments() {
       const reg = regs[0] as any;
       const programTuition = reg.programs?.tuition_fee || 0;
       const programRegFee = reg.programs?.registration_fee || 0;
+      setIsFreeProgram(!!reg.programs?.is_free_program);
       setTuitionFee(programTuition);
       setRegistrationFee(programRegFee);
+
 
       // Fetch approved scholarship
       if (reg.program_id) {
