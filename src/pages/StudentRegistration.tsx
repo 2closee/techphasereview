@@ -291,6 +291,9 @@ export default function StudentRegistration() {
       const projectedBatchNumber =
         formData.preferred_location_id === WARRI_LOCATION_ID && batchInfo ? batchInfo.batchNumber : null;
 
+      const selectedProgramIsFree = !!programs.find(p => p.id === formData.program_id)?.is_free_program;
+
+
       const { error } = await supabase
         .from('student_registrations')
         .insert({
