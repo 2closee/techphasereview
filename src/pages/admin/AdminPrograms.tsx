@@ -264,6 +264,7 @@ export default function AdminPrograms() {
       is_active: formData.is_active,
       is_free_short_course: formData.is_free_short_course,
       is_free_program: formData.is_free_program,
+      sponsor_name: formData.sponsor_name?.trim() || null,
 
     };
 
