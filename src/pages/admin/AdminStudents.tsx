@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin, Download, Search, ChevronLeft, ChevronRight, Package, Plus, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin, Download, Search, ChevronLeft, ChevronRight, Package, Plus, ShieldCheck, AlertTriangle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { downloadCsv } from '@/utils/csvExport';
 import { BatchAssignment } from '@/components/admin/BatchAssignment';
@@ -85,6 +85,13 @@ export default function AdminStudents() {
   const [bulkAssigning, setBulkAssigning] = useState(false);
   const [bulkWaiving, setBulkWaiving] = useState(false);
 
+  // Permanent deletion state (rejected applications only)
+  const [deleteTarget, setDeleteTarget] = useState<Registration | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
+
 
   // Bulk dialog cascading selects
   const [bulkPrograms, setBulkPrograms] = useState<BulkProgram[]>([]);
@@ -151,6 +158,56 @@ export default function AdminStudents() {
     }
     setUpdating(false);
   };
+
+  const runDelete = async (payload: { registration_ids?: string[]; all?: boolean }) => {
+    const { data, error } = await supabase.functions.invoke('delete-registrations', {
+      body: payload,
+    });
+    if (error) throw new Error(error.message);
+    if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+    return data as { deleted: number; accounts_deleted: number; skipped: number };
+  };
+
+  const handleDeleteOne = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const result = await runDelete({ registration_ids: [deleteTarget.id] });
+      if (result.deleted === 0) {
+        toast.error('Nothing was deleted — only rejected applications can be removed');
+      } else {
+        toast.success('Application permanently deleted');
+      }
+      setDeleteTarget(null);
+      setSelectedRegistration(null);
+      setOverrideRegistration(null);
+      fetchRegistrations();
+    } catch (err) {
+      toast.error(`Delete failed: ${(err as Error).message}`);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteAllRejected = async () => {
+    setDeleting(true);
+    try {
+      const result = await runDelete({ all: true });
+      toast.success(
+        `Deleted ${result.deleted} rejected application${result.deleted === 1 ? '' : 's'}` +
+          (result.accounts_deleted ? ` and ${result.accounts_deleted} login account(s)` : '')
+      );
+      setBulkDeleteOpen(false);
+      setBulkDeleteConfirm('');
+      setSelectedStudents(new Set());
+      fetchRegistrations();
+    } catch (err) {
+      toast.error(`Delete failed: ${(err as Error).message}`);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
 
   const { duplicateEmailIds, duplicatePhoneIds } = useMemo(
     () => findDuplicates(registrations),
@@ -467,6 +524,15 @@ export default function AdminStudents() {
             <Download className="w-4 h-4 mr-2" />
             Download CSV ({filteredRegistrations.length})
           </Button>
+          <Button
+            variant="destructive"
+            onClick={() => { setBulkDeleteConfirm(''); setBulkDeleteOpen(true); }}
+            disabled={(statusCounts.rejected || 0) === 0}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete all rejected ({statusCounts.rejected || 0})
+          </Button>
+
         </div>
 
         {/* Bulk Action Bar */}
@@ -603,6 +669,18 @@ export default function AdminStudents() {
                               <ShieldCheck className="w-4 h-4 mr-1" />
                               Override
                             </Button>
+                            {reg.status === 'rejected' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => setDeleteTarget(reg)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Delete
+                              </Button>
+                            )}
+
                           </div>
                         </td>
 
@@ -951,6 +1029,72 @@ export default function AdminStudents() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Delete single rejected application */}
+        <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-destructive">Permanently delete application</DialogTitle>
+              <DialogDescription>
+                This will permanently remove{' '}
+                <span className="font-medium text-foreground">
+                  {deleteTarget?.first_name} {deleteTarget?.last_name}
+                </span>{' '}
+                ({deleteTarget?.email}) and their login account from the database. This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteOne} disabled={deleting}>
+                {deleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                Delete permanently
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete all rejected applications */}
+        <Dialog open={bulkDeleteOpen} onOpenChange={(open) => { setBulkDeleteOpen(open); if (!open) setBulkDeleteConfirm(''); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-destructive">
+                Delete all rejected applications ({statusCounts.rejected || 0})
+              </DialogTitle>
+              <DialogDescription>
+                Every rejected application and its linked login account will be permanently removed from the
+                database. Approved, pending and enrolled students are never affected. This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="bulk-delete-confirm">
+                Type DELETE to confirm
+              </label>
+              <input
+                id="bulk-delete-confirm"
+                value={bulkDeleteConfirm}
+                onChange={(e) => setBulkDeleteConfirm(e.target.value)}
+                placeholder="DELETE"
+                className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setBulkDeleteOpen(false)} disabled={deleting}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteAllRejected}
+                disabled={deleting || bulkDeleteConfirm.trim().toUpperCase() !== 'DELETE'}
+              >
+                {deleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                Delete all rejected
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </DashboardLayout>
   );
