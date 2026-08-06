@@ -1029,6 +1029,72 @@ export default function AdminStudents() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Delete single rejected application */}
+        <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-destructive">Permanently delete application</DialogTitle>
+              <DialogDescription>
+                This will permanently remove{' '}
+                <span className="font-medium text-foreground">
+                  {deleteTarget?.first_name} {deleteTarget?.last_name}
+                </span>{' '}
+                ({deleteTarget?.email}) and their login account from the database. This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteOne} disabled={deleting}>
+                {deleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                Delete permanently
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete all rejected applications */}
+        <Dialog open={bulkDeleteOpen} onOpenChange={(open) => { setBulkDeleteOpen(open); if (!open) setBulkDeleteConfirm(''); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-destructive">
+                Delete all rejected applications ({statusCounts.rejected || 0})
+              </DialogTitle>
+              <DialogDescription>
+                Every rejected application and its linked login account will be permanently removed from the
+                database. Approved, pending and enrolled students are never affected. This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="bulk-delete-confirm">
+                Type DELETE to confirm
+              </label>
+              <input
+                id="bulk-delete-confirm"
+                value={bulkDeleteConfirm}
+                onChange={(e) => setBulkDeleteConfirm(e.target.value)}
+                placeholder="DELETE"
+                className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setBulkDeleteOpen(false)} disabled={deleting}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteAllRejected}
+                disabled={deleting || bulkDeleteConfirm.trim().toUpperCase() !== 'DELETE'}
+              >
+                {deleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                Delete all rejected
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </DashboardLayout>
   );
