@@ -13,6 +13,8 @@ import { GraduationCap, Loader2, ArrowLeft, Monitor, Cpu, CheckCircle2, MapPin, 
 import { z } from 'zod';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
+import { getDuplicateKind, duplicateMessage } from '@/lib/duplicateRegistration';
+
 
 const WARRI_LOCATION_ID = 'af2ca449-9394-46dd-b4b3-216bb50e9aeb';
 
