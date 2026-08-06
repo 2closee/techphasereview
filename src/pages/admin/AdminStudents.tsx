@@ -459,6 +459,8 @@ export default function AdminStudents() {
               <SelectItem value="approved">Approved</SelectItem>
               <SelectItem value="enrolled">Enrolled</SelectItem>
               <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="duplicates">Duplicates ({duplicateCount})</SelectItem>
+
             </SelectContent>
           </Select>
           <Button variant="outline" onClick={handleDownloadCsv} disabled={filteredRegistrations.length === 0}>
