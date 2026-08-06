@@ -152,8 +152,22 @@ export default function AdminStudents() {
     setUpdating(false);
   };
 
+  const { duplicateEmailIds, duplicatePhoneIds } = useMemo(
+    () => findDuplicates(registrations),
+    [registrations]
+  );
+  const duplicateCount = useMemo(
+    () => registrations.filter(r => duplicateEmailIds.has(r.id) || duplicatePhoneIds.has(r.id)).length,
+    [registrations, duplicateEmailIds, duplicatePhoneIds]
+  );
+
   const filteredRegistrations = registrations.filter(r => {
-    const matchesStatus = filterStatus === 'all' || r.status === filterStatus;
+    const matchesStatus =
+      filterStatus === 'all'
+        ? true
+        : filterStatus === 'duplicates'
+          ? duplicateEmailIds.has(r.id) || duplicatePhoneIds.has(r.id)
+          : r.status === filterStatus;
     if (!matchesStatus) return false;
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
@@ -163,6 +177,7 @@ export default function AdminStudents() {
       (r.matriculation_number && r.matriculation_number.toLowerCase().includes(q))
     );
   });
+
 
   const totalPages = Math.max(1, Math.ceil(filteredRegistrations.length / pageSize));
   const safeCurrentPage = Math.min(currentPage, totalPages);
