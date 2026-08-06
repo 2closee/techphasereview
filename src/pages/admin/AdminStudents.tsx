@@ -545,6 +545,17 @@ export default function AdminStudents() {
                         <td className="px-4 py-3">
                           <p className="text-sm text-foreground">{reg.email}</p>
                           <p className="text-xs text-muted-foreground">{reg.phone}</p>
+                          {(duplicateEmailIds.has(reg.id) || duplicatePhoneIds.has(reg.id)) && (
+                            <Badge variant="outline" className="mt-1 gap-1 border-amber-500/50 text-amber-600">
+                              <AlertTriangle className="w-3 h-3" />
+                              Duplicate {[
+                                duplicateEmailIds.has(reg.id) ? 'email' : null,
+                                duplicatePhoneIds.has(reg.id) ? 'phone' : null,
+                              ].filter(Boolean).join(' & ')}
+                            </Badge>
+                          )}
+                        </td>
+
                         </td>
                         <td className="px-4 py-3">
                           {reg.programs ? (
