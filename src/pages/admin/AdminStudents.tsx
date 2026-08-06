@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin, Download, Search, ChevronLeft, ChevronRight, Package, Plus, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin, Download, Search, ChevronLeft, ChevronRight, Package, Plus, ShieldCheck, AlertTriangle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { downloadCsv } from '@/utils/csvExport';
 import { BatchAssignment } from '@/components/admin/BatchAssignment';
