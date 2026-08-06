@@ -660,6 +660,18 @@ export default function AdminStudents() {
                               <ShieldCheck className="w-4 h-4 mr-1" />
                               Override
                             </Button>
+                            {reg.status === 'rejected' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => setDeleteTarget(reg)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Delete
+                              </Button>
+                            )}
+
                           </div>
                         </td>
 
