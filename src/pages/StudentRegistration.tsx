@@ -330,9 +330,18 @@ export default function StudentRegistration() {
 
       if (error) {
         console.error('Registration submission error:', error);
+        const dupKind = getDuplicateKind(error);
+        if (dupKind) {
+          const message = duplicateMessage(dupKind);
+          setErrors(prev => ({ ...prev, [dupKind]: message }));
+          setStep('form');
+          toast.error(message);
+          return;
+        }
         toast.error(`Failed to submit registration: ${error.message}`);
         return;
       }
+
 
       setRegistrationId(newRegistrationId);
       toast.success('Registration submitted! Complete your payment to continue.');
