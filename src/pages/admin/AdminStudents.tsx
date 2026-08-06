@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,11 +8,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin, Download, Search, ChevronLeft, ChevronRight, Package, Plus, ShieldCheck } from 'lucide-react';
+import { Users, Loader2, Eye, CheckCircle, XCircle, Clock, ChefHat, Scissors, IdCard, MapPin, Download, Search, ChevronLeft, ChevronRight, Package, Plus, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { downloadCsv } from '@/utils/csvExport';
 import { BatchAssignment } from '@/components/admin/BatchAssignment';
 import { EnrollmentOverride } from '@/components/admin/EnrollmentOverride';
+import { findDuplicates } from '@/lib/duplicateRegistration';
+
 
 
 type Registration = {
@@ -150,8 +152,22 @@ export default function AdminStudents() {
     setUpdating(false);
   };
 
+  const { duplicateEmailIds, duplicatePhoneIds } = useMemo(
+    () => findDuplicates(registrations),
+    [registrations]
+  );
+  const duplicateCount = useMemo(
+    () => registrations.filter(r => duplicateEmailIds.has(r.id) || duplicatePhoneIds.has(r.id)).length,
+    [registrations, duplicateEmailIds, duplicatePhoneIds]
+  );
+
   const filteredRegistrations = registrations.filter(r => {
-    const matchesStatus = filterStatus === 'all' || r.status === filterStatus;
+    const matchesStatus =
+      filterStatus === 'all'
+        ? true
+        : filterStatus === 'duplicates'
+          ? duplicateEmailIds.has(r.id) || duplicatePhoneIds.has(r.id)
+          : r.status === filterStatus;
     if (!matchesStatus) return false;
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
@@ -161,6 +177,7 @@ export default function AdminStudents() {
       (r.matriculation_number && r.matriculation_number.toLowerCase().includes(q))
     );
   });
+
 
   const totalPages = Math.max(1, Math.ceil(filteredRegistrations.length / pageSize));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -442,6 +459,8 @@ export default function AdminStudents() {
               <SelectItem value="approved">Approved</SelectItem>
               <SelectItem value="enrolled">Enrolled</SelectItem>
               <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="duplicates">Duplicates ({duplicateCount})</SelectItem>
+
             </SelectContent>
           </Select>
           <Button variant="outline" onClick={handleDownloadCsv} disabled={filteredRegistrations.length === 0}>
@@ -526,6 +545,15 @@ export default function AdminStudents() {
                         <td className="px-4 py-3">
                           <p className="text-sm text-foreground">{reg.email}</p>
                           <p className="text-xs text-muted-foreground">{reg.phone}</p>
+                          {(duplicateEmailIds.has(reg.id) || duplicatePhoneIds.has(reg.id)) && (
+                            <Badge variant="outline" className="mt-1 gap-1 border-amber-500/50 text-amber-600">
+                              <AlertTriangle className="w-3 h-3" />
+                              Duplicate {[
+                                duplicateEmailIds.has(reg.id) ? 'email' : null,
+                                duplicatePhoneIds.has(reg.id) ? 'phone' : null,
+                              ].filter(Boolean).join(' & ')}
+                            </Badge>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           {reg.programs ? (

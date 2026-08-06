@@ -13,6 +13,8 @@ import { GraduationCap, Loader2, ArrowLeft, Monitor, Cpu, CheckCircle2, MapPin, 
 import { z } from 'zod';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
+import { getDuplicateKind, duplicateMessage } from '@/lib/duplicateRegistration';
+
 
 const WARRI_LOCATION_ID = 'af2ca449-9394-46dd-b4b3-216bb50e9aeb';
 
@@ -330,9 +332,18 @@ export default function StudentRegistration() {
 
       if (error) {
         console.error('Registration submission error:', error);
+        const dupKind = getDuplicateKind(error);
+        if (dupKind) {
+          const message = duplicateMessage(dupKind);
+          setErrors(prev => ({ ...prev, [dupKind]: message }));
+          setStep('form');
+          toast.error(message);
+          return;
+        }
         toast.error(`Failed to submit registration: ${error.message}`);
         return;
       }
+
 
       setRegistrationId(newRegistrationId);
       toast.success('Registration submitted! Complete your payment to continue.');

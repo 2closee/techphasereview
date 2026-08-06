@@ -14,6 +14,8 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
+import { getDuplicateKind, duplicateMessage } from '@/lib/duplicateRegistration';
+
 
 const registrationSchema = z.object({
   last_name: z.string().trim().min(2, 'Surname must be at least 2 characters').max(50),
@@ -177,8 +179,17 @@ export default function FreeShortCourse() {
       setStep('success');
       toast.success('Registration successful!');
     } catch (err: any) {
+      const dupKind = getDuplicateKind(err);
+      if (dupKind) {
+        const message = duplicateMessage(dupKind);
+        setErrors(prev => ({ ...prev, [dupKind]: message }));
+        setStep('form');
+        toast.error(message);
+        return;
+      }
       toast.error(`Registration failed: ${err.message}`);
     } finally {
+
       setSubmitting(false);
     }
   };
