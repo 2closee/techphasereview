@@ -555,8 +555,6 @@ export default function AdminStudents() {
                             </Badge>
                           )}
                         </td>
-
-                        </td>
                         <td className="px-4 py-3">
                           {reg.programs ? (
                             <div className="flex flex-col gap-1">
