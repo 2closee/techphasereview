@@ -524,6 +524,15 @@ export default function AdminStudents() {
             <Download className="w-4 h-4 mr-2" />
             Download CSV ({filteredRegistrations.length})
           </Button>
+          <Button
+            variant="destructive"
+            onClick={() => { setBulkDeleteConfirm(''); setBulkDeleteOpen(true); }}
+            disabled={(statusCounts.rejected || 0) === 0}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete all rejected ({statusCounts.rejected || 0})
+          </Button>
+
         </div>
 
         {/* Bulk Action Bar */}
