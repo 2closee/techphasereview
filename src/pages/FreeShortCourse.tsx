@@ -179,8 +179,17 @@ export default function FreeShortCourse() {
       setStep('success');
       toast.success('Registration successful!');
     } catch (err: any) {
+      const dupKind = getDuplicateKind(err);
+      if (dupKind) {
+        const message = duplicateMessage(dupKind);
+        setErrors(prev => ({ ...prev, [dupKind]: message }));
+        setStep('form');
+        toast.error(message);
+        return;
+      }
       toast.error(`Registration failed: ${err.message}`);
     } finally {
+
       setSubmitting(false);
     }
   };
