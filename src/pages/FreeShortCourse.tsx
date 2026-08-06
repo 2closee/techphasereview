@@ -14,6 +14,8 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
+import { getDuplicateKind, duplicateMessage } from '@/lib/duplicateRegistration';
+
 
 const registrationSchema = z.object({
   last_name: z.string().trim().min(2, 'Surname must be at least 2 characters').max(50),
