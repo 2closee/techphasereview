@@ -85,6 +85,13 @@ export default function AdminStudents() {
   const [bulkAssigning, setBulkAssigning] = useState(false);
   const [bulkWaiving, setBulkWaiving] = useState(false);
 
+  // Permanent deletion state (rejected applications only)
+  const [deleteTarget, setDeleteTarget] = useState<Registration | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
+
 
   // Bulk dialog cascading selects
   const [bulkPrograms, setBulkPrograms] = useState<BulkProgram[]>([]);
