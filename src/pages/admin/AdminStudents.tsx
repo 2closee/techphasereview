@@ -152,6 +152,56 @@ export default function AdminStudents() {
     setUpdating(false);
   };
 
+  const runDelete = async (payload: { registration_ids?: string[]; all?: boolean }) => {
+    const { data, error } = await supabase.functions.invoke('delete-registrations', {
+      body: payload,
+    });
+    if (error) throw new Error(error.message);
+    if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+    return data as { deleted: number; accounts_deleted: number; skipped: number };
+  };
+
+  const handleDeleteOne = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const result = await runDelete({ registration_ids: [deleteTarget.id] });
+      if (result.deleted === 0) {
+        toast.error('Nothing was deleted — only rejected applications can be removed');
+      } else {
+        toast.success('Application permanently deleted');
+      }
+      setDeleteTarget(null);
+      setSelectedRegistration(null);
+      setOverrideRegistration(null);
+      fetchRegistrations();
+    } catch (err) {
+      toast.error(`Delete failed: ${(err as Error).message}`);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteAllRejected = async () => {
+    setDeleting(true);
+    try {
+      const result = await runDelete({ all: true });
+      toast.success(
+        `Deleted ${result.deleted} rejected application${result.deleted === 1 ? '' : 's'}` +
+          (result.accounts_deleted ? ` and ${result.accounts_deleted} login account(s)` : '')
+      );
+      setBulkDeleteOpen(false);
+      setBulkDeleteConfirm('');
+      setSelectedStudents(new Set());
+      fetchRegistrations();
+    } catch (err) {
+      toast.error(`Delete failed: ${(err as Error).message}`);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+
   const { duplicateEmailIds, duplicatePhoneIds } = useMemo(
     () => findDuplicates(registrations),
     [registrations]
