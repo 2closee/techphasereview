@@ -146,6 +146,75 @@ export type Database = {
         }
         Relationships: []
       }
+      coding_challenge_attempts: {
+        Row: {
+          challenge_id: number
+          created_at: string
+          feedback: string | null
+          id: string
+          is_correct: boolean
+          submitted_code: string
+          track: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: number
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          is_correct?: boolean
+          submitted_code?: string
+          track: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: number
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          is_correct?: boolean
+          submitted_code?: string
+          track?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      coding_challenge_progress: {
+        Row: {
+          attempts: number
+          challenge_id: number
+          completed_at: string | null
+          created_at: string
+          id: string
+          is_completed: boolean
+          track: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          challenge_id: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          track: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          challenge_id?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          track?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       course_batches: {
         Row: {
           batch_number: number
