@@ -176,7 +176,7 @@ export default function PracticeWorkspace() {
                   key={c.id}
                   onClick={() => openChallenge(c.id)}
                   className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors flex items-center gap-2 ${
-                    current?.id === c.id ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary'
+                    current?.id === c.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
                   }`}
                 >
                   <span className="font-mono text-xs opacity-70 w-6 shrink-0">{c.id}</span>
@@ -209,7 +209,7 @@ export default function PracticeWorkspace() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div
-                    className="prose prose-sm max-w-none dark:prose-invert [&_pre]:bg-secondary [&_pre]:p-3 [&_pre]:rounded-md [&_pre]:overflow-x-auto [&_code]:font-mono text-sm"
+                    className="prose prose-sm max-w-none dark:prose-invert [&_pre]:bg-muted [&_pre]:text-foreground [&_pre]:p-3 [&_pre]:rounded-md [&_pre]:overflow-x-auto [&_code]:font-mono text-sm"
                     dangerouslySetInnerHTML={{ __html: clean(current.introduction) }}
                   />
                   <div
@@ -248,7 +248,7 @@ export default function PracticeWorkspace() {
                     spellCheck={false}
                     rows={10}
                     placeholder="Write your answer here..."
-                    className="w-full rounded-md border border-border bg-secondary/40 p-3 font-mono text-sm leading-relaxed text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full rounded-md border border-border bg-muted/60 p-3 font-mono text-sm leading-relaxed text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   <div className="flex flex-wrap items-center gap-2">
                     <Button onClick={handleCheck} disabled={checking || !code.trim()}>
