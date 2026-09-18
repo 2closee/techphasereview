@@ -50,6 +50,10 @@ import AdminScholarships from "./pages/admin/AdminScholarships";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import FreeShortCourse from "./pages/FreeShortCourse";
+import Practice from "./pages/Practice";
+import StudentPractice from "./pages/student/StudentPractice";
+import TeacherPractice from "./pages/teacher/TeacherPractice";
+import AdminPractice from "./pages/admin/AdminPractice";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,6 +74,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/register" element={<StudentRegistration />} />
               <Route path="/free-course" element={<FreeShortCourse />} />
+              <Route path="/practice" element={<Practice />} />
               <Route path="/complete-enrollment" element={<CompleteEnrollment />} />
               <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -88,6 +93,7 @@ const App = () => (
               <Route path="/admin/payments" element={<ProtectedRoute allowedRoles={['admin']}><AdminPayments /></ProtectedRoute>} />
               <Route path="/admin/reports" element={<ProtectedRoute allowedRoles={['admin']}><AdminReports /></ProtectedRoute>} />
               <Route path="/admin/scholarships" element={<ProtectedRoute allowedRoles={['admin']}><AdminScholarships /></ProtectedRoute>} />
+              <Route path="/admin/practice" element={<ProtectedRoute allowedRoles={['admin']}><AdminPractice /></ProtectedRoute>} />
               <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin']}><AdminSettings /></ProtectedRoute>} />
               <Route path="/admin/*" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
               
@@ -105,6 +111,7 @@ const App = () => (
               <Route path="/teacher/attendance" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherAttendance /></ProtectedRoute>} />
               <Route path="/teacher/timetable" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherTimetable /></ProtectedRoute>} />
               <Route path="/teacher/grades" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherGrades /></ProtectedRoute>} />
+              <Route path="/teacher/practice" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherPractice /></ProtectedRoute>} />
               <Route path="/teacher/profile" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherProfile /></ProtectedRoute>} />
               <Route path="/teacher/*" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherDashboard /></ProtectedRoute>} />
               
@@ -113,6 +120,7 @@ const App = () => (
               <Route path="/student/sessions" element={<ProtectedRoute allowedRoles={['student']}><StudentEnrollment /></ProtectedRoute>} />
               <Route path="/student/checkin" element={<ProtectedRoute allowedRoles={['student']}><StudentCheckIn /></ProtectedRoute>} />
               <Route path="/student/courses" element={<ProtectedRoute allowedRoles={['student']}><StudentCourses /></ProtectedRoute>} />
+              <Route path="/student/practice" element={<ProtectedRoute allowedRoles={['student']}><StudentPractice /></ProtectedRoute>} />
               <Route path="/student/grades" element={<ProtectedRoute allowedRoles={['student']}><StudentGrades /></ProtectedRoute>} />
               <Route path="/student/payments" element={<ProtectedRoute allowedRoles={['student']}><StudentPayments /></ProtectedRoute>} />
               <Route path="/student/scholarship" element={<ProtectedRoute allowedRoles={['student']}><StudentScholarship /></ProtectedRoute>} />
