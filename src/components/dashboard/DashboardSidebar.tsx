@@ -24,6 +24,7 @@ import {
   Shield,
   MapPin,
   Award,
+  Code2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -47,6 +48,7 @@ const adminNavItems: NavItem[] = [
   { title: 'Payments', href: '/admin/payments', icon: CreditCard },
   { title: 'Reports', href: '/admin/reports', icon: BarChart3 },
   { title: 'Scholarships', href: '/admin/scholarships', icon: Award },
+  { title: 'Practice', href: '/admin/practice', icon: Code2 },
   { title: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
@@ -57,6 +59,7 @@ const teacherNavItems: NavItem[] = [
   { title: 'Attendance', href: '/teacher/attendance', icon: ClipboardList },
   { title: 'Timetable', href: '/teacher/timetable', icon: Calendar },
   { title: 'Grades', href: '/teacher/grades', icon: FileText },
+  { title: 'Practice', href: '/teacher/practice', icon: Code2 },
   { title: 'Profile', href: '/teacher/profile', icon: UserCircle },
 ];
 
@@ -65,6 +68,7 @@ const studentNavItems: NavItem[] = [
   { title: 'Sessions', href: '/student/sessions', icon: Calendar },
   { title: 'Check-In', href: '/student/checkin', icon: Clock },
   { title: 'My Courses', href: '/student/courses', icon: BookOpen },
+  { title: 'Practice', href: '/student/practice', icon: Code2 },
   { title: 'Grades', href: '/student/grades', icon: FileText },
   { title: 'Payments', href: '/student/payments', icon: CreditCard },
   { title: 'Scholarship', href: '/student/scholarship', icon: Award },

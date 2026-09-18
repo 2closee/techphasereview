@@ -22,6 +22,7 @@ const Navbar = () => {
 
   const navLinks = [
     { name: "Programs", href: "#programs" },
+    { name: "Practice Lab", href: "/practice" },
     { name: "About", href: "#about" },
     { name: "Admissions", href: "#admissions" },
     { name: "FAQ", href: "#faq" },
