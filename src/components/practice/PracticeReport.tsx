@@ -163,7 +163,7 @@ export default function PracticeReport() {
                       .map((d) => (
                         <div
                           key={`${d.track}-${d.challenge_id}`}
-                          className="flex items-center justify-between rounded-md bg-secondary/40 px-3 py-1.5"
+                          className="flex items-center justify-between rounded-md bg-muted/60 px-3 py-1.5"
                         >
                           <span className="font-mono text-xs uppercase">
                             {d.track} #{d.challenge_id}
