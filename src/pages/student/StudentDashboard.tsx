@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
 import { isPaymentSettled, isSponsored, sponsorLabel } from '@/lib/paymentStatus';
+import PracticeSummaryCard from '@/components/practice/PracticeSummaryCard';
 
 const WARRI_LOCATION_ID = 'af2ca449-9394-46dd-b4b3-216bb50e9aeb';
 
