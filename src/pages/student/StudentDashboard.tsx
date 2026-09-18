@@ -483,6 +483,9 @@ export default function StudentDashboard() {
           ))}
         </div>
 
+        {/* Coding practice */}
+        <PracticeSummaryCard />
+
         {/* Batch Info for Warri Students */}
         {registration.preferred_location_id === WARRI_LOCATION_ID && batchInfo && (
           <Card className="border-primary/30 bg-primary/5">
